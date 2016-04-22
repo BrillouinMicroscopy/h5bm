@@ -1,0 +1,47 @@
+\documentclass[a4paper,12pt,titlepage,BCOR7mm, bibliography=totoc, parskip=half,numbers=noenddot]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+\usepackage{tikz}
+
+\usepackage[plainpages=false, bookmarks=true, pdfborder={0 0 0}]{hyperref}
+
+\usepackage[linguistics]{forest}
+
+%Kopf- und Fußzeilenformatierung
+\usepackage[automark,markuppercase]{scrpage2}
+\pagestyle{scrheadings}
+\addtokomafont{pageheadfoot}{\normalfont}
+
+
+\begin{document}
+
+\ifoot{HDF5 for BM -- v0.0.1}
+\ofoot{Raimund Schlüßler}
+
+\section*{HDF5 data storage for Brillouin microscopy data}
+
+The data acquired with the Brillouin spectrometer is stored as a HDF5 file for larger compatibility with different programming languages and for a future proof archiving.
+
+\subsection*{Structure of the HDF5 data storage file}
+
+The used structure is shown in figure~\ref{fig:hdf5structure}.
+
+\begin{figure}[h!]
+	\centering
+	\input{pictures/hdf5-structure.tex}
+	\caption{Structure of the HDF5 file used for storing Brillouin image sets.}
+	\label{fig:hdf5structure}
+\end{figure}
+
+\subsection*{Writing HDF5 data}
+
+A sample script written in MATLAB for writing the HDF5 data storage file for Brillouin microscopy is provided.
+
+\subsection*{Reading HDF5 data}
+
+A sample script written in MATLAB for reading the HDF5 data storage file for Brillouin microscopy is provided.
+
+\end{document}

@@ -1,0 +1,17 @@
+# Temporary MATLAB files #
+#########################
+*.asv
+
+# Temporary latex files #
+#########################
+*.aux
+*.bcf
+*.blg
+*.lof
+*.log
+*.out
+*.spl
+*synctex.gz
+*.run.xml
+*.auxlock
+*.toc
