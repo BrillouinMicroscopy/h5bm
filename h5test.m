@@ -4,12 +4,15 @@ ccc;
 
 filename = 'BM-Test_01';
 
-version = 'BM1-v0.0.1';
+version = 'H5BM-v0.0.1';
 date = datetime('now');
 date.TimeZone = 'local';
 date.Format = 'uuuu-MM-dd''T''HH:mm:ssXXX';
 date = char(date);
 comments = sprintf('First Test of datastorage for BM using the HDF5 standard.\nSeems to work.');
+
+resolution_x = 256;
+resolution_y = 512;
 
 %% create the HDF5 file
 filepath = fullfile('',[filename,'.h5']);      %filename
@@ -50,6 +53,39 @@ H5A.close(attr_id);
 H5P.close(acpl_id);
 H5S.close(space_id);
 H5T.close(type_id);
+
+%% create group for payload data
+plist = 'H5P_DEFAULT';
+group_id = H5G.create(fileID,'payload',plist,plist,plist);
+
+    % create attributes for resolutions
+    type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+    space_id = H5S.create_simple(1,1,1);
+    acpl_id = H5P.create('H5P_ATTRIBUTE_CREATE');
+    attr_id = H5A.create(group_id,'resolution-x',type_id,space_id,acpl_id);
+    H5A.write(attr_id,type_id,resolution_x);
+    H5A.close(attr_id);
+    H5P.close(acpl_id);
+    H5S.close(space_id);
+    H5T.close(type_id);
+    
+    type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+    space_id = H5S.create_simple(1,1,1);
+    acpl_id = H5P.create('H5P_ATTRIBUTE_CREATE');
+    attr_id = H5A.create(group_id,'resolution-y',type_id,space_id,acpl_id);
+    H5A.write(attr_id,type_id,resolution_y);
+    H5A.close(attr_id);
+    H5P.close(acpl_id);
+    H5S.close(space_id);
+    H5T.close(type_id);
+    
+
+    plist = 'H5P_DEFAULT';
+    data_id = H5G.create(group_id,'data',plist,plist,plist);
+    
+    H5G.close(data_id);
+
+H5G.close(group_id);
 
 % datatypeID = H5T.copy('H5T_NATIVE_DOUBLE');
 % dims = size(testdata);
