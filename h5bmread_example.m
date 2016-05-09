@@ -18,8 +18,15 @@ resolution.X = file.resolutionX;
 % get the resolution in y-direction
 resolution.Y = file.resolutionY;
 
-img33 = file.readPayloadData(3,3,'data');
-date33 = file.readPayloadData(3,3,'date');
+% get the payload data at index (3,3)
+img33_data = file.readPayloadData(3,3,'data');
+% get the payload data date at index (3,3)
+img33_date = file.readPayloadData(3,3,'date');
+
+% get the background image data
+bg_data = file.readBackgroundData('data');
+% get the background image data date
+bg_date = file.readBackgroundData('date');
 
 % close the handle
 h5bmclose(file);

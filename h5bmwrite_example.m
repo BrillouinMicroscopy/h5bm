@@ -20,11 +20,16 @@ img = randn(100,80,2);
 img(10:30,10:30) = 4;
 datestring = '2016-05-06';
 for jj = 1:file.resolutionX
-    disp(jj);
     for kk = 1:file.resolutionY
         file.writePayloadData(jj,kk,img,'datestring',datestring);
     end
 end
+
+% set the background image data
+bg = randn(100,80,1);
+bg(15:45,15:45) = 4;
+datestring = '2016-05-07';
+file.writeBackgroundData(bg,'datestring',datestring);
 
 % close the handle
 h5bmclose(file);

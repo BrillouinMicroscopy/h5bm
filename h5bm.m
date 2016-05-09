@@ -220,10 +220,10 @@ classdef h5bm < handle
             index = (p.Results.indx-1)*obj.resolutionX + (p.Results.indy - 1);
             
             type_id = H5T.copy('H5T_NATIVE_DOUBLE');
-            dims = size(data);
+            dims = size(p.Results.data);
             h5_dims = fliplr(dims);
             h5_maxdims = h5_dims;
-            space_id = H5S.create_simple(ndims(data),h5_dims,h5_maxdims);
+            space_id = H5S.create_simple(ndims(p.Results.data),h5_dims,h5_maxdims);
             dcpl = 'H5P_DEFAULT';
             plist = 'H5P_DEFAULT';
             try
@@ -292,6 +292,84 @@ classdef h5bm < handle
                 error('The specified data type is not supported.');
             end
         end
+        
+        %% Set the background data
+        function writeBackgroundData (obj, data, varargin)
+            obj.writable;
+            index = 1;
+            p = inputParser;
+            defaultDate = 'now';
+            
+            addRequired(p,'data',@isnumeric);
+            addParameter(p,'datestring',defaultDate,@obj.checkDate)
+            
+            parse(p, data, varargin{:});
+            
+            type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+            dims = size(p.Results.data);
+            h5_dims = fliplr(dims);
+            h5_maxdims = h5_dims;
+            space_id = H5S.create_simple(ndims(p.Results.data),h5_dims,h5_maxdims);
+            dcpl = 'H5P_DEFAULT';
+            plist = 'H5P_DEFAULT';
+            try
+                dset_id = H5D.open(obj.backgroundDataHandle,num2str(index));
+            catch
+                dset_id = H5D.create(obj.backgroundDataHandle,num2str(index),type_id,space_id,dcpl);
+            end
+            H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,p.Results.data);
+
+            try
+                datum = obj.parseDate(p.Results.datestring);
+            catch e
+                error(['''%s'' does not seem to be a valid dateformat: ' e.message], datestring);
+            end
+            
+            %% Write date attribute
+            type_id_date = H5T.copy('H5T_C_S1');
+            H5T.set_size (type_id_date, numel(datum));
+            space_id_date = H5S.create_simple(1,1,1);
+            acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
+            try
+                attr_id_date = H5A.open(dset_id,'date');
+            catch
+                attr_id_date = H5A.create(dset_id,'date',type_id_date,space_id_date,acpl_id_date);
+            end
+            H5A.write(attr_id_date,type_id_date,datum);
+            H5A.close(attr_id_date);
+            H5P.close(acpl_id_date);
+            H5S.close(space_id_date);
+            H5T.close(type_id_date);
+
+            %% Close payload dataset
+            H5D.close(dset_id);
+            H5S.close(space_id);
+            H5T.close(type_id);
+        end
+        
+        %% Read the background data
+        function data = readBackgroundData (obj, type)
+            index = 1;
+            if strcmp(type, 'data')
+                try
+                    dset_id = H5D.open(obj.backgroundDataHandle, num2str(index));
+                    data = H5D.read(dset_id);
+                catch
+                    error('The dataset ''%s'' cannot be found.', num2str(index));
+                end
+            elseif strcmp(type, 'date')
+                try
+                    dset_id = H5D.open(obj.backgroundDataHandle, num2str(index));
+                    attr_id = H5A.open(dset_id,'date');
+                    data = H5A.read(attr_id);
+                    data = transpose(data);
+                catch
+                    error('The attribute ''date'' of the dataset ''%s'' cannot be found.', num2str(index));
+                end
+            else
+                error('The specified data type is not supported.');
+            end
+        end
     end
     methods (Access = private)
         %% Check for write privileges
@@ -319,6 +397,16 @@ classdef h5bm < handle
             catch
                 plist = 'H5P_DEFAULT';
                 data_id = H5G.create(group_id,'data',plist,plist,plist);
+            end
+        end
+        
+        %% Get handle for background data
+        function data_id = backgroundDataHandle (obj)
+            try
+                data_id = H5G.open(obj.fileHandle,'background');
+            catch
+                plist = 'H5P_DEFAULT';
+                data_id = H5G.create(obj.fileHandle,'background',plist,plist,plist);
             end
         end
 
