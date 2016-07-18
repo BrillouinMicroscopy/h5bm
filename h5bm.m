@@ -340,29 +340,30 @@ classdef h5bm < handle
         end
         
         %% Set the payload data
-        function writePayloadData (obj, indx, indy, data, varargin)
+        function writePayloadData (obj, indx, indy, indz, data, varargin)
             obj.writable;
-            if isempty(obj.resolutionX) || isempty(obj.resolutionY)
-                error('Please set the resolution in x- and y-direction first (h5bm.resolutionX and h5bm.resolutionY).');
+            if isempty(obj.resolutionX) || isempty(obj.resolutionY) || isempty(obj.resolutionZ)
+                error('Please set the resolution in x-, y- and z-direction first (h5bm.resolutionX, h5bm.resolutionY and h5bm.resolutionZ).');
             end
             p = inputParser;
             defaultDate = 'now';
             
             addRequired(p,'indx',@isnumeric);
             addRequired(p,'indy',@isnumeric);
+            addRequired(p,'indz',@isnumeric);
             addRequired(p,'data',@isnumeric);
             addParameter(p,'datestring',defaultDate,@obj.checkDate)
             
-            parse(p, indx, indy, data, varargin{:});
+            parse(p, indx, indy, indz, data, varargin{:});
 
-            if p.Results.indx > obj.resolutionX || p.Results.indy > obj.resolutionY
+            if p.Results.indx > obj.resolutionX || p.Results.indy > obj.resolutionY || p.Results.indz > obj.resolutionZ
                 error('Index exceeds matrix dimensions.');
             end
-            if p.Results.indx < 0 || p.Results.indy < 0
+            if p.Results.indx < 0 || p.Results.indy < 0 || p.Results.indz < 0
                 error('Subscript indices must either be real positive integers or logicals.');
             end
             
-            index = (p.Results.indx-1)*obj.resolutionX + (p.Results.indy - 1);
+            index = ((p.Results.indz-1)*(obj.resolutionX*obj.resolutionY) + (p.Results.indy-1)*obj.resolutionX + (p.Results.indx-1));
             
             type_id = H5T.copy('H5T_NATIVE_DOUBLE');
             dims = size(p.Results.data);
@@ -407,7 +408,7 @@ classdef h5bm < handle
         end
         
         %% Get the payload data
-        function data = readPayloadData (obj, indx, indy, type)
+        function data = readPayloadData (obj, indx, indy, indz, type)
             if indx > obj.resolutionX || indy > obj.resolutionY
                 error('Index exceeds matrix dimensions.');
             end
@@ -415,7 +416,7 @@ classdef h5bm < handle
                 error('Subscript indices must either be real positive integers or logicals.');
             end
             
-            index = (indx-1)*obj.resolutionX + (indy - 1);
+            index = ((indz-1)*(obj.resolutionX*obj.resolutionY) + (indy-1)*obj.resolutionX + (indx-1));
             
             if strcmp(type, 'data')
                 try

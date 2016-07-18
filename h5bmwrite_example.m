@@ -42,9 +42,11 @@ file.positionsZ = Z;
 img = randn(100,80,2);
 img(10:30,10:30) = 4;
 datestring = '2016-05-06';
-for jj = 1:file.resolutionX
+for jj = 1:file.resolutionZ
     for kk = 1:file.resolutionY
-        file.writePayloadData(jj,kk,img,'datestring',datestring);
+        for ll = 1:file.resolutionX
+            file.writePayloadData(ll,kk,jj,img,'datestring',datestring);
+        end
     end
 end
 

@@ -30,10 +30,10 @@ positions.Y = file.positionsY;
 % get the positions in x-direction
 positions.Z = file.positionsZ;
 
-% get the payload data at index (3,3)
-img33_data = file.readPayloadData(3,3,'data');
+% get the payload data at index (3,3,1)
+img33_data = file.readPayloadData(3,3,1,'data');
 % get the payload data date at index (3,3)
-img33_date = file.readPayloadData(3,3,'date');
+img33_date = file.readPayloadData(3,3,1,'date');
 
 % get the background image data
 bg_data = file.readBackgroundData('data');
