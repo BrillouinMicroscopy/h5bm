@@ -15,6 +15,9 @@ file.resolutionX = 5;
 % set the resolution in y-direction
 file.resolutionY = 5;
 
+% set the resolution in z-direction
+file.resolutionZ = 1;
+
 % set the payload data
 img = randn(100,80,2);
 img(10:30,10:30) = 4;

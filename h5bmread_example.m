@@ -18,6 +18,9 @@ resolution.X = file.resolutionX;
 % get the resolution in y-direction
 resolution.Y = file.resolutionY;
 
+% get the resolution in z-direction
+resolution.Z = file.resolutionZ;
+
 % get the payload data at index (3,3)
 img33_data = file.readPayloadData(3,3,'data');
 % get the payload data date at index (3,3)

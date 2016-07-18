@@ -13,6 +13,7 @@ classdef h5bm < handle
         comment;
         resolutionX;
         resolutionY;
+        resolutionZ;
     end
     
 	methods
@@ -191,6 +192,36 @@ classdef h5bm < handle
             catch e
                 warning(['The attribute ''resolution-y'' does not seem to exist: ' e.message]);
                 resolutionY = '';
+            end
+        end
+        
+        %% Set the resolution in z-direction
+        function set.resolutionZ (obj, resolutionZ)
+            group_id = obj.payloadHandle();
+            type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+            space_id = H5S.create_simple(1,1,1);
+            acpl_id = H5P.create('H5P_ATTRIBUTE_CREATE');
+            try
+                attr_id = H5A.open(group_id,'resolution-z');
+            catch
+                attr_id = H5A.create(group_id,'resolution-z',type_id,space_id,acpl_id);
+            end
+            H5A.write(attr_id,type_id,resolutionZ);
+            H5A.close(attr_id);
+            H5P.close(acpl_id);
+            H5S.close(space_id);
+            H5T.close(type_id);
+        end
+        
+        %% Get the resolution in z-direction
+        function resolutionZ = get.resolutionZ (obj)
+            group_id = obj.payloadHandle();
+            try
+                attr_id = H5A.open(group_id, 'resolution-z');
+                resolutionZ = transpose(H5A.read(attr_id));
+            catch e
+                warning(['The attribute ''resolution-z'' does not seem to exist: ' e.message]);
+                resolutionZ = '';
             end
         end
         
