@@ -14,6 +14,9 @@ classdef h5bm < handle
         resolutionX;
         resolutionY;
         resolutionZ;
+        positionsX;
+        positionsY;
+        positionsZ;
     end
     
 	methods
@@ -222,6 +225,117 @@ classdef h5bm < handle
             catch e
                 warning(['The attribute ''resolution-z'' does not seem to exist: ' e.message]);
                 resolutionZ = '';
+            end
+        end
+        
+        %% Set the positions in x-direction
+        function set.positionsX (obj, positionsX)
+            obj.writable;
+            if isempty(obj.resolutionX) || isempty(obj.resolutionY)
+                error('Please set the resolution in x- and y-direction first (h5bm.resolutionX and h5bm.resolutionY).');
+            end
+            
+            type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+            dims = size(positionsX);
+            h5_dims = fliplr(dims);
+            h5_maxdims = h5_dims;
+            space_id = H5S.create_simple(ndims(positionsX),h5_dims,h5_maxdims);
+            dcpl = 'H5P_DEFAULT';
+            plist = 'H5P_DEFAULT';
+            try
+                dset_id = H5D.open(obj.payloadHandle,'positions-x');
+            catch
+                dset_id = H5D.create(obj.payloadHandle,'positions-x',type_id,space_id,dcpl);
+            end
+            H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,positionsX);
+
+            %% Close payload dataset
+            H5D.close(dset_id);
+            H5S.close(space_id);
+            H5T.close(type_id);
+        end
+        
+        %% Set the positions in x-direction
+        function positionsX = get.positionsX (obj)            
+            try
+                dset_id = H5D.open(obj.payloadHandle,'positions-x');
+                positionsX = H5D.read(dset_id);
+            catch
+                error('The dataset ''%s'' cannot be found.','positions-x');
+            end
+        end
+        
+        %% Set the positions in x-direction
+        function set.positionsY (obj, positionsY)
+            obj.writable;
+            if isempty(obj.resolutionX) || isempty(obj.resolutionY)
+                error('Please set the resolution in x- and y-direction first (h5bm.resolutionX and h5bm.resolutionY).');
+            end
+            
+            type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+            dims = size(positionsY);
+            h5_dims = fliplr(dims);
+            h5_maxdims = h5_dims;
+            space_id = H5S.create_simple(ndims(positionsY),h5_dims,h5_maxdims);
+            dcpl = 'H5P_DEFAULT';
+            plist = 'H5P_DEFAULT';
+            try
+                dset_id = H5D.open(obj.payloadHandle,'positions-y');
+            catch
+                dset_id = H5D.create(obj.payloadHandle,'positions-y',type_id,space_id,dcpl);
+            end
+            H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,positionsY);
+
+            %% Close payload dataset
+            H5D.close(dset_id);
+            H5S.close(space_id);
+            H5T.close(type_id);
+        end
+        
+        %% Set the positions in x-direction
+        function positionsY = get.positionsY (obj)            
+            try
+                dset_id = H5D.open(obj.payloadHandle,'positions-y');
+                positionsY = H5D.read(dset_id);
+            catch
+                error('The dataset ''%s'' cannot be found.','positions-y');
+            end
+        end
+        
+        %% Set the positions in x-direction
+        function set.positionsZ (obj, positionsZ)
+            obj.writable;
+            if isempty(obj.resolutionX) || isempty(obj.resolutionZ)
+                error('Please set the resolution in x- and y-direction first (h5bm.resolutionX and h5bm.resolutionY).');
+            end
+            
+            type_id = H5T.copy('H5T_NATIVE_DOUBLE');
+            dims = size(positionsZ);
+            h5_dims = fliplr(dims);
+            h5_maxdims = h5_dims;
+            space_id = H5S.create_simple(ndims(positionsZ),h5_dims,h5_maxdims);
+            dcpl = 'H5P_DEFAULT';
+            plist = 'H5P_DEFAULT';
+            try
+                dset_id = H5D.open(obj.payloadHandle,'positions-z');
+            catch
+                dset_id = H5D.create(obj.payloadHandle,'positions-z',type_id,space_id,dcpl);
+            end
+            H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,positionsZ);
+
+            %% Close payload dataset
+            H5D.close(dset_id);
+            H5S.close(space_id);
+            H5T.close(type_id);
+        end
+        
+        %% Set the positions in x-direction
+        function positionsZ = get.positionsZ (obj)            
+            try
+                dset_id = H5D.open(obj.payloadHandle,'positions-z');
+                positionsZ = H5D.read(dset_id);
+            catch
+                error('The dataset ''%s'' cannot be found.','positions-z');
             end
         end
         
