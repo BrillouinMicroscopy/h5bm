@@ -56,5 +56,11 @@ bg(15:45,15:45) = 4;
 datestring = '2016-05-07';
 file.writeBackgroundData(bg,'datestring',datestring);
 
+% set the background image data
+cal = randn(100,80,1);
+cal(15:45,15:45) = 4;
+datestring = '2016-05-07';
+file.writeCalibrationData(cal,'datestring',datestring);
+
 % close the handle
 h5bmclose(file);

@@ -40,5 +40,10 @@ bg_data = file.readBackgroundData('data');
 % get the background image data date
 bg_date = file.readBackgroundData('date');
 
+% get the calibration image data
+cal_data = file.readCalibrationData('data');
+% get the calibration image data date
+cal_date = file.readCalibrationData('date');
+
 % close the handle
 h5bmclose(file);
