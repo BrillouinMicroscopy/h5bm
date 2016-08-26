@@ -644,24 +644,44 @@ classdef h5bm < handle
             end
         end
 
-    end
-    methods (Static)
+        %% Parse datetime to ISO string
+        function datum = parseDate (obj, datestring)
+            format = obj.dateFormat(datestring);
+            if format
+                datum = datetime(datestring, 'InputFormat', format, 'TimeZone', 'UTC');
+            else
+                datum = datetime(datestring);
+            end
+            datum.TimeZone = 'local';
+            datum.Format = 'uuuu-MM-dd''T''HH:mm:ssXXX';
+            datum = char(datum);
+        end
+        
         %% Check datestring for validity
-        function check = checkDate (date)
+        function check = checkDate (obj, datestring)
             try
-                datetime(date);
+                format = obj.dateFormat(datestring);
+                if format
+                    datetime(datestring, 'InputFormat', format, 'TimeZone', 'UTC');
+                else
+                    datetime(datestring);
+                end
                 check = true;
             catch
                 check = false;
             end
         end
 
-        %% Parse datetime to ISO string
-        function datum = parseDate (datestring)
-            datum = datetime(datestring);
-            datum.TimeZone = 'local';
-            datum.Format = 'uuuu-MM-dd''T''HH:mm:ssXXX';
-            datum = char(datum);
+    end
+    methods (Static)
+        
+        %% Get input date format
+        function format = dateFormat (datestring)
+            if regexp(datestring, '\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)')
+                format = 'uuuu-MM-dd''T''HH:mm:ssXXX';
+            else
+                format = '';
+            end
         end
     end
 end
