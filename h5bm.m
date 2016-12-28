@@ -518,16 +518,18 @@ classdef h5bm < handle
         end
         
         %% Set the calibration data
-        function writeCalibrationData (obj, data, varargin)
+        function writeCalibrationData (obj, index, data, shift, varargin)
             obj.writable;
-            index = 1;
             p = inputParser;
             defaultDate = 'now';
             
+            addRequired(p,'index',@isnumeric);
             addRequired(p,'data',@isnumeric);
-            addParameter(p,'datestring',defaultDate,@obj.checkDate)
+            addRequired(p,'shift',@isnumeric);
+            addParameter(p,'sample',@ischar);
+            addParameter(p,'datestring',defaultDate,@obj.checkDate);
             
-            parse(p, data, varargin{:});
+            parse(p, index, data, shift, varargin{:});
             
             type_id = H5T.copy('H5T_NATIVE_DOUBLE');
             dims = size(p.Results.data);
@@ -537,9 +539,9 @@ classdef h5bm < handle
             dcpl = 'H5P_DEFAULT';
             plist = 'H5P_DEFAULT';
             try
-                dset_id = H5D.open(obj.calibrationDataHandle,num2str(index));
+                dset_id = H5D.open(obj.calibrationDataHandle,num2str(p.Results.index));
             catch
-                dset_id = H5D.create(obj.calibrationDataHandle,num2str(index),type_id,space_id,dcpl);
+                dset_id = H5D.create(obj.calibrationDataHandle,num2str(p.Results.index),type_id,space_id,dcpl);
             end
             H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,p.Results.data);
 
@@ -564,7 +566,38 @@ classdef h5bm < handle
             H5P.close(acpl_id_date);
             H5S.close(space_id_date);
             H5T.close(type_id_date);
-
+            
+            %% Write sample attribute
+            type_id_date = H5T.copy('H5T_C_S1');
+            H5T.set_size (type_id_date, numel(p.Results.sample));
+            space_id_date = H5S.create_simple(1,1,1);
+            acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
+            try
+                attr_id_date = H5A.open(dset_id,'sample');
+            catch
+                attr_id_date = H5A.create(dset_id,'sample',type_id_date,space_id_date,acpl_id_date);
+            end
+            H5A.write(attr_id_date,type_id_date,p.Results.sample);
+            H5A.close(attr_id_date);
+            H5P.close(acpl_id_date);
+            H5S.close(space_id_date);
+            H5T.close(type_id_date);
+            
+            %% Write shift attribute
+            type_id_date = H5T.copy('H5T_NATIVE_DOUBLE');
+            space_id_date = H5S.create_simple(1,1,1);
+            acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
+            try
+                attr_id_date = H5A.open(dset_id,'shift');
+            catch
+                attr_id_date = H5A.create(dset_id,'shift',type_id_date,space_id_date,acpl_id_date);
+            end
+            H5A.write(attr_id_date,type_id_date,p.Results.shift);
+            H5A.close(attr_id_date);
+            H5P.close(acpl_id_date);
+            H5S.close(space_id_date);
+            H5T.close(type_id_date);
+            
             %% Close payload dataset
             H5D.close(dset_id);
             H5S.close(space_id);
@@ -572,8 +605,7 @@ classdef h5bm < handle
         end
         
         %% Read the calibration data
-        function data = readCalibrationData (obj, type)
-            index = 1;
+        function data = readCalibrationData (obj, index, type)
             if strcmp(type, 'data')
                 try
                     dset_id = H5D.open(obj.calibrationDataHandle, num2str(index));
@@ -589,6 +621,24 @@ classdef h5bm < handle
                     data = transpose(data);
                 catch
                     error('The attribute ''date'' of the dataset ''%s'' cannot be found.', num2str(index));
+                end
+            elseif strcmp(type, 'sample')
+                try
+                    dset_id = H5D.open(obj.calibrationDataHandle, num2str(index));
+                    attr_id = H5A.open(dset_id,'sample');
+                    data = H5A.read(attr_id);
+                    data = transpose(data);
+                catch
+                    error('The attribute ''sample'' of the dataset ''%s'' cannot be found.', num2str(index));
+                end
+            elseif strcmp(type, 'shift')
+                try
+                    dset_id = H5D.open(obj.calibrationDataHandle, num2str(index));
+                    attr_id = H5A.open(dset_id,'shift');
+                    data = H5A.read(attr_id);
+                    data = transpose(data);
+                catch
+                    error('The attribute ''shift'' of the dataset ''%s'' cannot be found.', num2str(index));
                 end
             else
                 error('The specified data type is not supported.');
@@ -634,13 +684,24 @@ classdef h5bm < handle
             end
         end
         
-        %% Get handle for calibration data
-        function data_id = calibrationDataHandle (obj)
+        %% Get handle for payload group
+        function group_id = calibrationHandle (obj)
             try
-                data_id = H5G.open(obj.fileHandle,'calibration');
+                group_id = H5G.open(obj.fileHandle,'calibration');
             catch
                 plist = 'H5P_DEFAULT';
-                data_id = H5G.create(obj.fileHandle,'calibration',plist,plist,plist);
+                group_id = H5G.create(obj.fileHandle,'calibration',plist,plist,plist);
+            end
+        end
+        
+        %% Get handle for calibration data
+        function data_id = calibrationDataHandle (obj)
+            group_id = obj.calibrationHandle();
+            try
+                data_id = H5G.open(group_id,'calibrationData');
+            catch
+                plist = 'H5P_DEFAULT';
+                data_id = H5G.create(group_id,'calibrationData',plist,plist,plist);
             end
         end
 

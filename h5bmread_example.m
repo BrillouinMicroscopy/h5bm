@@ -31,19 +31,35 @@ positions.Y = file.positionsY;
 positions.Z = file.positionsZ;
 
 % get the payload data at index (3,3,1)
-img33_data = file.readPayloadData(3,3,1,'data');
+payload = struct();
+payload.data = file.readPayloadData(3,3,1,'data');
 % get the payload data date at index (3,3)
-img33_date = file.readPayloadData(3,3,1,'date');
+payload.date = file.readPayloadData(3,3,1,'date');
 
 % get the background image data
-bg_data = file.readBackgroundData('data');
+bg = struct();
+bg.data = file.readBackgroundData('data');
 % get the background image data date
-bg_date = file.readBackgroundData('date');
+bg.date = file.readBackgroundData('date');
 
 % get the calibration image data
-cal_data = file.readCalibrationData('data');
+cal = struct();
+cal(1).data = file.readCalibrationData(1,'data');
 % get the calibration image data date
-cal_date = file.readCalibrationData('date');
+cal(1).date = file.readCalibrationData(1,'date');
+% get the calibration image data sample type
+cal(1).sample = file.readCalibrationData(1,'sample');
+% get the calibration image data date
+cal(1).shift = file.readCalibrationData(1,'shift');
+
+% get the calibration image data
+cal(2).data = file.readCalibrationData(2,'data');
+% get the calibration image data date
+cal(2).date = file.readCalibrationData(2,'date');
+% get the calibration image data sample type
+cal(2).sample = file.readCalibrationData(2,'sample');
+% get the calibration image data date
+cal(2).shift = file.readCalibrationData(2,'shift');
 
 % close the handle
 h5bmclose(file);
