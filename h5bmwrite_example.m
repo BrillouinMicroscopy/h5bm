@@ -39,28 +39,40 @@ file.positionsY = Y;
 file.positionsZ = Z;
 
 % set the payload data
-img = randn(100,80,2);
-img(10:30,10:30) = 4;
-datestring = '2016-05-06';
+payload.data = randn(100,80,2);
+payload.data(10:30,10:30) = 4;
+payload.date = '2016-05-06';
 for jj = 1:file.resolutionZ
     for kk = 1:file.resolutionY
         for ll = 1:file.resolutionX
-            file.writePayloadData(ll,kk,jj,img,'datestring',datestring);
+            file.writePayloadData(ll,kk,jj,payload.data,'datestring',payload.date);
         end
     end
 end
 
 % set the background image data
-bg = randn(100,80,1);
-bg(15:45,15:45) = 4;
-datestring = '2016-05-06T11:11:00+02:00';
-file.writeBackgroundData(bg,'datestring',datestring);
+bg = struct();
+bg.data = randn(100,80,2);
+bg.data(15:45,15:45) = 4;
+bg.date = '2016-05-06T11:11:00+02:00';
+file.writeBackgroundData(bg.data,'datestring',bg.date);
 
-% set the background image data
-cal = randn(100,80,1);
-cal(15:45,15:45) = 4;
-datestring = 'now';
-file.writeCalibrationData(cal,'datestring',datestring);
+cal = struct();
+% set the calibration image data for the first calibration sample
+cal(1).data = randn(100,80,3);
+cal(1).data(15:45,15:45) = 4;
+cal(1).date = 'now';
+cal(1).sample = 'Methanol';
+cal(1).shift = 3.799;
+file.writeCalibrationData(1,cal(1).data,cal(1).shift,'datestring',cal(1).date,'sample',cal(1).sample);
+
+% set the calibration image data for the second calibration sample
+cal(2).data = randn(100,80,4);
+cal(2).data(15:45,15:45) = 4;
+cal(2).date = 'now';
+cal(2).sample = 'Water';
+cal(2).shift = 5.088;
+file.writeCalibrationData(2,cal(2).data,cal(2).shift,'datestring',cal(2).date,'sample',cal(2).sample);
 
 % close the handle
 h5bmclose(file);
