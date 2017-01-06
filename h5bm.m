@@ -5,7 +5,7 @@ classdef h5bm < handle
         write = false;
     end
     properties (Constant)
-        versionstring = 'H5BM-v0.0.2';
+        versionstring = 'H5BM-v0.0.3';
     end
     properties (Dependent)
         date;
