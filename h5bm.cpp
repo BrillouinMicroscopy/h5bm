@@ -7,10 +7,12 @@ using namespace std::experimental::filesystem::v1;
 H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 	: QObject(parent) {
 	if (flags == H5F_ACC_RDONLY) {
+		writable = FALSE;
 		if (exists(filename)) {
 			file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
 	} else if (flags == H5F_ACC_RDWR) {
+		writable = TRUE;
 		if (!exists(filename)) {
 			// create the file
 			file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
@@ -30,6 +32,15 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 		}
 	}
 }
+
+std::string H5BM::parseDate(std::string datestring)
+{
+	return std::string();
+}
+
+std::string H5BM::returnDateFormat(std::string datestring) {
+	return std::string();
+};
 
 H5BM::~H5BM() {
 	H5Fclose(file);
