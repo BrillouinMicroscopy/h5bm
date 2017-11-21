@@ -22,12 +22,15 @@ public:
 	const std::string versionstring = "H5BM-v0.0.3";
 	hid_t file;		// handle to the opened file
 
+	// get attribute
+	std::string getAttribute(std::string attrName);
+
 	// date
 	void setDate(std::string datestring);
 	std::string getDate();
 
 	// version
-	void setVersion(std::string version);
+	// setVersion() is not implemented because the version attribute is set on file creation
 	std::string getVersion();
 
 	// comment

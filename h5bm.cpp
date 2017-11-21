@@ -37,6 +37,24 @@ H5BM::~H5BM() {
 	H5Fclose(file);
 }
 
+std::string H5BM::getAttribute(std::string attrName) {
+	std::string string = "";
+	try {
+		hid_t attr_id = H5Aopen(file, attrName.c_str(), H5P_DEFAULT);
+		hsize_t attr_size = H5Aget_storage_size(attr_id);
+		char *buf = new char[attr_size + 1];
+		hid_t attr_type = H5Aget_type(attr_id);
+		H5Aread(attr_id, attr_type, buf);
+		string.assign(buf, attr_size);
+		delete[] buf;
+		buf = 0;
+	}
+	catch (int e) {
+		// attribute was not found
+	}
+	return string;
+}
+
 void H5BM::setDate(std::string datestring) {
 	if (!writable) {
 		return;
@@ -64,18 +82,11 @@ void H5BM::setDate(std::string datestring) {
 }
 
 std::string H5BM::getDate() {
-	std::string datestring = "";
-	try {
-		hid_t attr_id = H5Aopen(file, "date", H5P_DEFAULT);
-		hsize_t attr_size = H5Aget_storage_size(attr_id);
-		char *buf = new char[attr_size+1];
-		hid_t attr_type = H5Aget_type(attr_id);
-		H5Aread(attr_id, attr_type, buf);
-		datestring.assign(buf, attr_size);
-		delete[] buf;
-		buf = 0;
-	} catch (int e) {
-		// attribute was not found
-	}
-	return datestring;
+	std::string attrName = "date";
+	return getAttribute(attrName);
+}
+
+std::string H5BM::getVersion() {
+	std::string attrName = "version";
+	return getAttribute(attrName);
 }
