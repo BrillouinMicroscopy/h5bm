@@ -17,16 +17,7 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 			// create the file
 			file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
 			// set the version attribute
-			hid_t type_id = H5Tcopy(H5T_C_S1);
-			H5Tset_size(type_id, versionstring.length());
-			hsize_t dims[1] = { 1 };
-			hsize_t maxdims[1] = { 1 };
-			hid_t space_id = H5Screate_simple(1, dims, maxdims);
-			hid_t attr_id = H5Acreate2(file, "version", type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
-			H5Awrite(attr_id, type_id, versionstring.c_str());
-			H5Aclose(attr_id);
-			H5Sclose(space_id);
-			H5Tclose(type_id);
+			setAttribute("version", versionstring);
 		} else {
 			file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
@@ -35,6 +26,33 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 
 H5BM::~H5BM() {
 	H5Fclose(file);
+}
+
+void H5BM::setAttribute(std::string attrName, std::string datestring) {
+	if (!writable) {
+		return;
+	}
+	hid_t type_id = H5Tcopy(H5T_C_S1);
+	H5Tset_size(type_id, datestring.length());
+	hsize_t dims[1] = { 1 };
+	hsize_t maxdims[1] = { 1 };
+	hid_t space_id = H5Screate_simple(1, dims, maxdims);
+	hid_t acpl_id = H5Pcreate(H5P_ATTRIBUTE_CREATE);
+	hid_t attr_id;
+	try {
+		attr_id = H5Aopen(file, attrName.c_str(), H5P_DEFAULT);
+		if (attr_id < 0) {
+			throw(-1);
+		}
+	}
+	catch (int e) {
+		attr_id = H5Acreate2(file, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	H5Awrite(attr_id, type_id, datestring.c_str());
+	H5Aclose(attr_id);
+	H5Pclose(acpl_id);
+	H5Sclose(space_id);
+	H5Tclose(type_id);
 }
 
 std::string H5BM::getAttribute(std::string attrName) {
@@ -56,29 +74,8 @@ std::string H5BM::getAttribute(std::string attrName) {
 }
 
 void H5BM::setDate(std::string datestring) {
-	if (!writable) {
-		return;
-	}
-	hid_t type_id = H5Tcopy(H5T_C_S1);
-	H5Tset_size(type_id, datestring.length());
-	hsize_t dims[1] = { 1 };
-	hsize_t maxdims[1] = { 1 };
-	hid_t space_id = H5Screate_simple(1, dims, maxdims);
-	hid_t acpl_id = H5Pcreate(H5P_ATTRIBUTE_CREATE);
-	hid_t attr_id;
-	try {
-		attr_id = H5Aopen(file, "date", H5P_DEFAULT);
-		if (attr_id < 0) {
-			throw(-1);
-		}
-	} catch (int e) {
-		attr_id = H5Acreate2(file, "date", type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	}
-	H5Awrite(attr_id, type_id, datestring.c_str());
-	H5Aclose(attr_id);
-	H5Pclose(acpl_id);
-	H5Sclose(space_id);
-	H5Tclose(type_id);
+	std::string attrName = "date";
+	setAttribute(attrName, datestring);
 }
 
 std::string H5BM::getDate() {
@@ -88,5 +85,15 @@ std::string H5BM::getDate() {
 
 std::string H5BM::getVersion() {
 	std::string attrName = "version";
+	return getAttribute(attrName);
+}
+
+void H5BM::setComment(std::string datestring) {
+	std::string attrName = "comment";
+	setAttribute(attrName, datestring);
+}
+
+std::string H5BM::getComment() {
+	std::string attrName = "comment";
 	return getAttribute(attrName);
 }

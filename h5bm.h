@@ -12,6 +12,10 @@ class H5BM : public QObject {
 private:
 	bool writable = FALSE;
 
+	// set/get attribute
+	void setAttribute(std::string attrName, std::string datestring);
+	std::string getAttribute(std::string attrName);
+
 public:
 	H5BM(
 		QObject *parent = 0,
@@ -21,9 +25,6 @@ public:
 	~H5BM();
 	const std::string versionstring = "H5BM-v0.0.3";
 	hid_t file;		// handle to the opened file
-
-	// get attribute
-	std::string getAttribute(std::string attrName);
 
 	// date
 	void setDate(std::string datestring);
