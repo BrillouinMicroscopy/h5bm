@@ -22,9 +22,6 @@ public:
 	const std::string versionstring = "H5BM-v0.0.3";
 	hid_t file;		// handle to the opened file
 
-	std::string parseDate(std::string datestring);
-	std::string returnDateFormat(std::string datestring);
-
 	// date
 	void setDate(std::string datestring);
 	std::string getDate();
