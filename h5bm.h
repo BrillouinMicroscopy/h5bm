@@ -13,7 +13,9 @@ private:
 	bool writable = FALSE;
 
 	// set/get attribute
-	void setAttribute(std::string attrName, std::string datestring);
+	void setAttribute(std::string attrName, hid_t attrType, std::string attr);
+	void setStringAttribute(std::string attrName, std::string attr);
+	void setDoubleAttribute(std::string attrName, std::string attr);
 	std::string getAttribute(std::string attrName);
 
 public:
@@ -39,11 +41,11 @@ public:
 	std::string getComment();
 
 	// resolution
-	void setResolution(char direction, int resolution);
+	void setResolution(std::string direction, int resolution);
 	int getResolution(int direction);
 
 	// positions
-	void setPositions(char direction, std::vector<int>& positions);
+	void setPositions(std::string direction, std::vector<int>& positions);
 	std::vector<int> getPositions(char direction);
 
 	// payload data

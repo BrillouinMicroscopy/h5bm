@@ -17,7 +17,7 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 			// create the file
 			file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
 			// set the version attribute
-			setAttribute("version", versionstring);
+			setStringAttribute("version", versionstring);
 		} else {
 			file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
@@ -28,12 +28,12 @@ H5BM::~H5BM() {
 	H5Fclose(file);
 }
 
-void H5BM::setAttribute(std::string attrName, std::string datestring) {
+void H5BM::setAttribute(std::string attrName, hid_t attrType, std::string attr) {
 	if (!writable) {
 		return;
 	}
-	hid_t type_id = H5Tcopy(H5T_C_S1);
-	H5Tset_size(type_id, datestring.length());
+	hid_t type_id = H5Tcopy(attrType);
+	H5Tset_size(type_id, attr.length());
 	hsize_t dims[1] = { 1 };
 	hsize_t maxdims[1] = { 1 };
 	hid_t space_id = H5Screate_simple(1, dims, maxdims);
@@ -48,11 +48,19 @@ void H5BM::setAttribute(std::string attrName, std::string datestring) {
 	catch (int e) {
 		attr_id = H5Acreate2(file, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
 	}
-	H5Awrite(attr_id, type_id, datestring.c_str());
+	H5Awrite(attr_id, type_id, attr.c_str());
 	H5Aclose(attr_id);
 	H5Pclose(acpl_id);
 	H5Sclose(space_id);
 	H5Tclose(type_id);
+}
+
+void H5BM::setStringAttribute(std::string attrName, std::string attr) {
+	setAttribute(attrName, H5T_C_S1, attr);
+}
+
+void H5BM::setDoubleAttribute(std::string attrName, std::string attr) {
+	setAttribute(attrName, H5T_NATIVE_DOUBLE, attr);
 }
 
 std::string H5BM::getAttribute(std::string attrName) {
@@ -73,9 +81,9 @@ std::string H5BM::getAttribute(std::string attrName) {
 	return string;
 }
 
-void H5BM::setDate(std::string datestring) {
+void H5BM::setDate(std::string date) {
 	std::string attrName = "date";
-	setAttribute(attrName, datestring);
+	setStringAttribute(attrName, date);
 }
 
 std::string H5BM::getDate() {
@@ -88,9 +96,9 @@ std::string H5BM::getVersion() {
 	return getAttribute(attrName);
 }
 
-void H5BM::setComment(std::string datestring) {
+void H5BM::setComment(std::string comment) {
 	std::string attrName = "comment";
-	setAttribute(attrName, datestring);
+	setStringAttribute(attrName, comment);
 }
 
 std::string H5BM::getComment() {
