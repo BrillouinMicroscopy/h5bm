@@ -12,11 +12,25 @@ class H5BM : public QObject {
 private:
 	bool writable = FALSE;
 
+	const std::string versionstring = "H5BM-v0.0.3";
+	hid_t file;		// handle to the opened file
+
+	hid_t payload;
+	hid_t payloadData;
+
+	hid_t calibration;
+	hid_t calibrationData;
+
+	hid_t background;
+	hid_t backgroundData;
+
 	// set/get attribute
-	void setAttribute(std::string attrName, hid_t attrType, std::string attr);
-	void setStringAttribute(std::string attrName, std::string attr);
-	void setDoubleAttribute(std::string attrName, std::string attr);
-	std::string getAttribute(std::string attrName);
+	void setAttribute(std::string attrName, std::string attr);
+	void setAttribute(std::string attrName, int attr);
+	void setAttribute(std::string attrName, double attr);
+	std::string getAttributeString(std::string attrName);
+	int getAttributeInt(std::string attrName);
+	double getAttributeDouble(std::string attrName);
 
 public:
 	H5BM(
@@ -25,8 +39,6 @@ public:
 		int flags = H5F_ACC_RDONLY
 	);
 	~H5BM();
-	const std::string versionstring = "H5BM-v0.0.3";
-	hid_t file;		// handle to the opened file
 
 	// date
 	void setDate(std::string datestring);
@@ -42,7 +54,7 @@ public:
 
 	// resolution
 	void setResolution(std::string direction, int resolution);
-	int getResolution(int direction);
+	int getResolution(std::string direction);
 
 	// positions
 	void setPositions(std::string direction, std::vector<int>& positions);
