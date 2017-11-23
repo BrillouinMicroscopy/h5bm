@@ -24,12 +24,20 @@ private:
 	hid_t background;
 	hid_t backgroundData;
 
+	void getGroupHandles(bool create = FALSE);
+
 	// set/get attribute
+	void setAttribute(std::string attrName, std::string attr, hid_t parent);
+	void setAttribute(std::string attrName, int attr, hid_t parent);
+	void setAttribute(std::string attrName, double attr, hid_t parent);
 	void setAttribute(std::string attrName, std::string attr);
 	void setAttribute(std::string attrName, int attr);
 	void setAttribute(std::string attrName, double attr);
+	std::string getAttributeString(std::string attrName, hid_t parent);
 	std::string getAttributeString(std::string attrName);
+	int getAttributeInt(std::string attrName, hid_t parent);
 	int getAttributeInt(std::string attrName);
+	double getAttributeDouble(std::string attrName, hid_t parent);
 	double getAttributeDouble(std::string attrName);
 
 public:
