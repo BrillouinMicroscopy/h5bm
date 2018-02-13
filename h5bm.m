@@ -33,14 +33,14 @@ classdef h5bm < handle
                 obj.write = true;
                 if exist(obj.filePath, 'file') ~= 2
                     % create the HDF5 file
-                    obj.fileHandle = H5F.create(filePath,'H5F_ACC_EXCL','H5P_DEFAULT','H5P_DEFAULT');
+                    obj.fileHandle = H5F.create(filePath, 'H5F_ACC_EXCL', 'H5P_DEFAULT', 'H5P_DEFAULT');
                     % set the version attribute
                     type_id = H5T.copy('H5T_C_S1');
                     H5T.set_size (type_id, numel(obj.versionstring));
-                    space_id = H5S.create_simple(1,1,1);
+                    space_id = H5S.create_simple(1, 1, 1);
                     acpl_id = H5P.create('H5P_ATTRIBUTE_CREATE');
-                    attr_id = H5A.create(obj.fileHandle,'version',type_id,space_id,acpl_id);
-                    H5A.write(attr_id,type_id,obj.versionstring);
+                    attr_id = H5A.create(obj.fileHandle, 'version', type_id, space_id, acpl_id);
+                    H5A.write(attr_id, type_id, obj.versionstring);
                     H5A.close(attr_id);
                     H5P.close(acpl_id);
                     H5S.close(space_id);
@@ -66,14 +66,14 @@ classdef h5bm < handle
             end
             type_id = H5T.copy('H5T_C_S1');
             H5T.set_size (type_id, numel(datum));
-            space_id = H5S.create_simple(1,1,1);
+            space_id = H5S.create_simple(1, 1, 1);
             acpl_id = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
-                attr_id = H5A.open(obj.fileHandle,'date');
+                attr_id = H5A.open(obj.fileHandle, 'date');
             catch
-                attr_id = H5A.create(obj.fileHandle,'date',type_id,space_id,acpl_id);
+                attr_id = H5A.create(obj.fileHandle, 'date', type_id, space_id, acpl_id);
             end
-            H5A.write(attr_id,type_id,datum);
+            H5A.write(attr_id, type_id, datum);
             H5A.close(attr_id);
             H5P.close(acpl_id);
             H5S.close(space_id);
@@ -113,14 +113,14 @@ classdef h5bm < handle
             obj.writable;
             type_id = H5T.copy('H5T_C_S1');
             H5T.set_size (type_id, numel(comment));
-            space_id = H5S.create_simple(1,1,1);
+            space_id = H5S.create_simple(1, 1 ,1);
             acpl_id = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
                 attr_id = H5A.open(obj.fileHandle,'comment');
             catch
-                attr_id = H5A.create(obj.fileHandle,'comment',type_id,space_id,acpl_id);
+                attr_id = H5A.create(obj.fileHandle,'comment', type_id, space_id, acpl_id);
             end
-            H5A.write(attr_id,type_id,comment);
+            H5A.write(attr_id, type_id, comment);
             H5A.close(attr_id);
             H5P.close(acpl_id);
             H5S.close(space_id);
@@ -139,15 +139,15 @@ classdef h5bm < handle
         end
         %% Set the resolution in specific direction
         function setResolution (obj, direction, resolution)
-            dirString = ['resolution-' direction];
+            direction = ['resolution-' direction];
             group_id = obj.payloadHandle();
             type_id = H5T.copy('H5T_NATIVE_DOUBLE');
-            space_id = H5S.create_simple(1,1,1);
+            space_id = H5S.create_simple(1, 1, 1);
             acpl_id = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
-                attr_id = H5A.open(group_id,dirString);
+                attr_id = H5A.open(group_id, direction);
             catch
-                attr_id = H5A.create(group_id,dirString,type_id,space_id,acpl_id);
+                attr_id = H5A.create(group_id, direction, type_id, space_id, acpl_id);
             end
             H5A.write(attr_id,type_id,resolution);
             H5A.close(attr_id);
@@ -158,13 +158,13 @@ classdef h5bm < handle
         
         %% Get the resolution in specific direction
         function resolution = getResolution (obj, direction)
-            dirString = ['resolution-' direction];
+            direction = ['resolution-' direction];
             group_id = obj.payloadHandle();
             try
-                attr_id = H5A.open(group_id, dirString);
+                attr_id = H5A.open(group_id, direction);
                 resolution = transpose(H5A.read(attr_id));
             catch e
-                warning(['The attribute ' dirString ' does not seem to exist: ' e.message]);
+                warning(['The attribute ' direction ' does not seem to exist: ' e.message]);
                 resolution = '';
             end
         end
@@ -201,7 +201,7 @@ classdef h5bm < handle
         
         %% Set the positions in specific direction
         function setPositions (obj, direction, positions)
-            dirString = ['positions-' direction];
+            direction = ['positions-' direction];
             obj.writable;
             if isempty(obj.resolutionX) || isempty(obj.resolutionY)
                 error('Please set the resolution in x- and y-direction first (h5bm.resolutionX and h5bm.resolutionY).');
@@ -211,13 +211,13 @@ classdef h5bm < handle
             dims = size(positions);
             h5_dims = fliplr(dims);
             h5_maxdims = h5_dims;
-            space_id = H5S.create_simple(ndims(positions),h5_dims,h5_maxdims);
+            space_id = H5S.create_simple(ndims(positions), h5_dims, h5_maxdims);
             dcpl = 'H5P_DEFAULT';
             plist = 'H5P_DEFAULT';
             try
-                dset_id = H5D.open(obj.payloadHandle, dirString);
+                dset_id = H5D.open(obj.payloadHandle, direction);
             catch
-                dset_id = H5D.create(obj.payloadHandle, dirString, type_id, space_id, dcpl);
+                dset_id = H5D.create(obj.payloadHandle, direction, type_id, space_id, dcpl);
             end
             H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', plist, positions);
             
@@ -229,12 +229,12 @@ classdef h5bm < handle
         
         %% Get the positions in specific direction
         function positions = getPositions (obj, direction)
-            dirString = ['positions-' direction];
+            direction = ['positions-' direction];
             try
-                dset_id = H5D.open(obj.payloadHandle, dirString);
+                dset_id = H5D.open(obj.payloadHandle, direction);
                 positions = H5D.read(dset_id);
             catch
-                error('The dataset ''%s'' cannot be found.', dirString);
+                error('The dataset ''%s'' cannot be found.', direction);
             end
         end
         
@@ -277,11 +277,11 @@ classdef h5bm < handle
             p = inputParser;
             defaultDate = 'now';
             
-            addRequired(p,'indx',@isnumeric);
-            addRequired(p,'indy',@isnumeric);
-            addRequired(p,'indz',@isnumeric);
-            addRequired(p,'data',@isnumeric);
-            addParameter(p,'datestring',defaultDate,@obj.checkDate)
+            addRequired(p, 'indx', @isnumeric);
+            addRequired(p, 'indy', @isnumeric);
+            addRequired(p, 'indz', @isnumeric);
+            addRequired(p, 'data', @isnumeric);
+            addParameter(p, 'datestring', defaultDate, @obj.checkDate)
             
             parse(p, indx, indy, indz, data, varargin{:});
             
@@ -298,13 +298,13 @@ classdef h5bm < handle
             dims = size(p.Results.data);
             h5_dims = fliplr(dims);
             h5_maxdims = h5_dims;
-            space_id = H5S.create_simple(ndims(p.Results.data),h5_dims,h5_maxdims);
+            space_id = H5S.create_simple(ndims(p.Results.data), h5_dims, h5_maxdims);
             dcpl = 'H5P_DEFAULT';
             plist = 'H5P_DEFAULT';
             try
-                dset_id = H5D.open(obj.payloadDataHandle,num2str(index));
+                dset_id = H5D.open(obj.payloadDataHandle, num2str(index));
             catch
-                dset_id = H5D.create(obj.payloadDataHandle,num2str(index),type_id,space_id,dcpl);
+                dset_id = H5D.create(obj.payloadDataHandle, num2str(index), type_id, space_id, dcpl);
             end
             H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,p.Results.data);
             
@@ -317,14 +317,14 @@ classdef h5bm < handle
             %% Write date attribute
             type_id_date = H5T.copy('H5T_C_S1');
             H5T.set_size (type_id_date, numel(datum));
-            space_id_date = H5S.create_simple(1,1,1);
+            space_id_date = H5S.create_simple(1, 1, 1);
             acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
                 attr_id_date = H5A.open(dset_id,'date');
             catch
-                attr_id_date = H5A.create(dset_id,'date',type_id_date,space_id_date,acpl_id_date);
+                attr_id_date = H5A.create(dset_id,'date', type_id_date, space_id_date, acpl_id_date);
             end
-            H5A.write(attr_id_date,type_id_date,datum);
+            H5A.write(attr_id_date, type_id_date, datum);
             H5A.close(attr_id_date);
             H5P.close(acpl_id_date);
             H5S.close(space_id_date);
@@ -349,15 +349,15 @@ classdef h5bm < handle
             
             if strcmp(type, 'data')
                 try
-                    dset_id = H5D.open(obj.payloadDataHandle,num2str(index));
+                    dset_id = H5D.open(obj.payloadDataHandle, num2str(index));
                     data = H5D.read(dset_id);
                 catch
                     error('The dataset ''%s'' cannot be found.', num2str(index));
                 end
             elseif strcmp(type, 'date')
                 try
-                    dset_id = H5D.open(obj.payloadDataHandle,num2str(index));
-                    attr_id = H5A.open(dset_id,'date');
+                    dset_id = H5D.open(obj.payloadDataHandle, num2str(index));
+                    attr_id = H5A.open(dset_id, 'date');
                     data = H5A.read(attr_id);
                     data = transpose(data);
                 catch
@@ -375,8 +375,8 @@ classdef h5bm < handle
             p = inputParser;
             defaultDate = 'now';
             
-            addRequired(p,'data',@isnumeric);
-            addParameter(p,'datestring',defaultDate,@obj.checkDate)
+            addRequired(p, 'data', @isnumeric);
+            addParameter(p, 'datestring', defaultDate, @obj.checkDate)
             
             parse(p, data, varargin{:});
             
@@ -384,15 +384,15 @@ classdef h5bm < handle
             dims = size(p.Results.data);
             h5_dims = fliplr(dims);
             h5_maxdims = h5_dims;
-            space_id = H5S.create_simple(ndims(p.Results.data),h5_dims,h5_maxdims);
+            space_id = H5S.create_simple(ndims(p.Results.data), h5_dims, h5_maxdims);
             dcpl = 'H5P_DEFAULT';
             plist = 'H5P_DEFAULT';
             try
-                dset_id = H5D.open(obj.backgroundDataHandle,num2str(index));
+                dset_id = H5D.open(obj.backgroundDataHandle, num2str(index));
             catch
-                dset_id = H5D.create(obj.backgroundDataHandle,num2str(index),type_id,space_id,dcpl);
+                dset_id = H5D.create(obj.backgroundDataHandle, num2str(index), type_id, space_id, dcpl);
             end
-            H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,p.Results.data);
+            H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', plist,p.Results.data);
             
             try
                 datum = obj.parseDate(p.Results.datestring);
@@ -403,14 +403,14 @@ classdef h5bm < handle
             %% Write date attribute
             type_id_date = H5T.copy('H5T_C_S1');
             H5T.set_size (type_id_date, numel(datum));
-            space_id_date = H5S.create_simple(1,1,1);
+            space_id_date = H5S.create_simple(1, 1, 1);
             acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
-                attr_id_date = H5A.open(dset_id,'date');
+                attr_id_date = H5A.open(dset_id, 'date');
             catch
-                attr_id_date = H5A.create(dset_id,'date',type_id_date,space_id_date,acpl_id_date);
+                attr_id_date = H5A.create(dset_id, 'date', type_id_date, space_id_date, acpl_id_date);
             end
-            H5A.write(attr_id_date,type_id_date,datum);
+            H5A.write(attr_id_date, type_id_date, datum);
             H5A.close(attr_id_date);
             H5P.close(acpl_id_date);
             H5S.close(space_id_date);
@@ -452,11 +452,11 @@ classdef h5bm < handle
             p = inputParser;
             defaultDate = 'now';
             
-            addRequired(p,'index',@isnumeric);
-            addRequired(p,'data',@isnumeric);
-            addRequired(p,'shift',@isnumeric);
-            addParameter(p,'sample',@ischar);
-            addParameter(p,'datestring',defaultDate,@obj.checkDate);
+            addRequired(p, 'index', @isnumeric);
+            addRequired(p, 'data', @isnumeric);
+            addRequired(p, 'shift', @isnumeric);
+            addParameter(p, 'sample', @ischar);
+            addParameter(p, 'datestring', defaultDate, @obj.checkDate);
             
             parse(p, index, data, shift, varargin{:});
             
@@ -464,15 +464,15 @@ classdef h5bm < handle
             dims = size(p.Results.data);
             h5_dims = fliplr(dims);
             h5_maxdims = h5_dims;
-            space_id = H5S.create_simple(ndims(p.Results.data),h5_dims,h5_maxdims);
+            space_id = H5S.create_simple(ndims(p.Results.data), h5_dims, h5_maxdims);
             dcpl = 'H5P_DEFAULT';
             plist = 'H5P_DEFAULT';
             try
-                dset_id = H5D.open(obj.calibrationDataHandle,num2str(p.Results.index));
+                dset_id = H5D.open(obj.calibrationDataHandle, num2str(p.Results.index));
             catch
-                dset_id = H5D.create(obj.calibrationDataHandle,num2str(p.Results.index),type_id,space_id,dcpl);
+                dset_id = H5D.create(obj.calibrationDataHandle, num2str(p.Results.index), type_id, space_id, dcpl);
             end
-            H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,p.Results.data);
+            H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', plist, p.Results.data);
             
             try
                 datum = obj.parseDate(p.Results.datestring);
@@ -483,14 +483,14 @@ classdef h5bm < handle
             %% Write date attribute
             type_id_date = H5T.copy('H5T_C_S1');
             H5T.set_size (type_id_date, numel(datum));
-            space_id_date = H5S.create_simple(1,1,1);
+            space_id_date = H5S.create_simple(1, 1, 1);
             acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
-                attr_id_date = H5A.open(dset_id,'date');
+                attr_id_date = H5A.open(dset_id, 'date');
             catch
-                attr_id_date = H5A.create(dset_id,'date',type_id_date,space_id_date,acpl_id_date);
+                attr_id_date = H5A.create(dset_id, 'date', type_id_date, space_id_date, acpl_id_date);
             end
-            H5A.write(attr_id_date,type_id_date,datum);
+            H5A.write(attr_id_date, type_id_date, datum);
             H5A.close(attr_id_date);
             H5P.close(acpl_id_date);
             H5S.close(space_id_date);
@@ -499,14 +499,14 @@ classdef h5bm < handle
             %% Write sample attribute
             type_id_date = H5T.copy('H5T_C_S1');
             H5T.set_size (type_id_date, numel(p.Results.sample));
-            space_id_date = H5S.create_simple(1,1,1);
+            space_id_date = H5S.create_simple(1, 1, 1);
             acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
-                attr_id_date = H5A.open(dset_id,'sample');
+                attr_id_date = H5A.open(dset_id, 'sample');
             catch
-                attr_id_date = H5A.create(dset_id,'sample',type_id_date,space_id_date,acpl_id_date);
+                attr_id_date = H5A.create(dset_id, 'sample', type_id_date, space_id_date, acpl_id_date);
             end
-            H5A.write(attr_id_date,type_id_date,p.Results.sample);
+            H5A.write(attr_id_date, type_id_date, p.Results.sample);
             H5A.close(attr_id_date);
             H5P.close(acpl_id_date);
             H5S.close(space_id_date);
@@ -514,14 +514,14 @@ classdef h5bm < handle
             
             %% Write shift attribute
             type_id_date = H5T.copy('H5T_NATIVE_DOUBLE');
-            space_id_date = H5S.create_simple(1,1,1);
+            space_id_date = H5S.create_simple(1, 1, 1);
             acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
-                attr_id_date = H5A.open(dset_id,'shift');
+                attr_id_date = H5A.open(dset_id, 'shift');
             catch
-                attr_id_date = H5A.create(dset_id,'shift',type_id_date,space_id_date,acpl_id_date);
+                attr_id_date = H5A.create(dset_id, 'shift', type_id_date, space_id_date, acpl_id_date);
             end
-            H5A.write(attr_id_date,type_id_date,p.Results.shift);
+            H5A.write(attr_id_date, type_id_date, p.Results.shift);
             H5A.close(attr_id_date);
             H5P.close(acpl_id_date);
             H5S.close(space_id_date);
@@ -545,7 +545,7 @@ classdef h5bm < handle
             elseif strcmp(type, 'date')
                 try
                     dset_id = H5D.open(obj.calibrationDataHandle, num2str(index));
-                    attr_id = H5A.open(dset_id,'date');
+                    attr_id = H5A.open(dset_id, 'date');
                     data = H5A.read(attr_id);
                     data = transpose(data);
                 catch
@@ -554,7 +554,7 @@ classdef h5bm < handle
             elseif strcmp(type, 'sample')
                 try
                     dset_id = H5D.open(obj.calibrationDataHandle, num2str(index));
-                    attr_id = H5A.open(dset_id,'sample');
+                    attr_id = H5A.open(dset_id, 'sample');
                     data = H5A.read(attr_id);
                     data = transpose(data);
                 catch
@@ -563,7 +563,7 @@ classdef h5bm < handle
             elseif strcmp(type, 'shift')
                 try
                     dset_id = H5D.open(obj.calibrationDataHandle, num2str(index));
-                    attr_id = H5A.open(dset_id,'shift');
+                    attr_id = H5A.open(dset_id, 'shift');
                     data = H5A.read(attr_id);
                     data = transpose(data);
                 catch
@@ -585,10 +585,10 @@ classdef h5bm < handle
         %% Get handle for payload group
         function group_id = payloadHandle (obj)
             try
-                group_id = H5G.open(obj.fileHandle,'payload');
+                group_id = H5G.open(obj.fileHandle, 'payload');
             catch
                 plist = 'H5P_DEFAULT';
-                group_id = H5G.create(obj.fileHandle,'payload',plist,plist,plist);
+                group_id = H5G.create(obj.fileHandle, 'payload', plist, plist, plist);
             end
         end
         
@@ -596,30 +596,30 @@ classdef h5bm < handle
         function data_id = payloadDataHandle (obj)
             group_id = obj.payloadHandle();
             try
-                data_id = H5G.open(group_id,'data');
+                data_id = H5G.open(group_id, 'data');
             catch
                 plist = 'H5P_DEFAULT';
-                data_id = H5G.create(group_id,'data',plist,plist,plist);
+                data_id = H5G.create(group_id, 'data', plist, plist, plist);
             end
         end
         
         %% Get handle for background data
         function data_id = backgroundDataHandle (obj)
             try
-                data_id = H5G.open(obj.fileHandle,'background');
+                data_id = H5G.open(obj.fileHandle, 'background');
             catch
                 plist = 'H5P_DEFAULT';
-                data_id = H5G.create(obj.fileHandle,'background',plist,plist,plist);
+                data_id = H5G.create(obj.fileHandle, 'background', plist, plist, plist);
             end
         end
         
         %% Get handle for payload group
         function group_id = calibrationHandle (obj)
             try
-                group_id = H5G.open(obj.fileHandle,'calibration');
+                group_id = H5G.open(obj.fileHandle, 'calibration');
             catch
                 plist = 'H5P_DEFAULT';
-                group_id = H5G.create(obj.fileHandle,'calibration',plist,plist,plist);
+                group_id = H5G.create(obj.fileHandle, 'calibration', plist, plist, plist);
             end
         end
         
@@ -627,10 +627,10 @@ classdef h5bm < handle
         function data_id = calibrationDataHandle (obj)
             group_id = obj.calibrationHandle();
             try
-                data_id = H5G.open(group_id,'calibrationData');
+                data_id = H5G.open(group_id, 'calibrationData');
             catch
                 plist = 'H5P_DEFAULT';
-                data_id = H5G.create(group_id,'calibrationData',plist,plist,plist);
+                data_id = H5G.create(group_id, 'calibrationData', plist, plist, plist);
             end
         end
         
