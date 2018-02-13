@@ -1,12 +1,12 @@
 %% Example file on how to read data from a h5 file created with h5bmwrite
 
 %% set resolution and positions
-resX = 5;
-x = linspace(0.2,0.3,resX);
-resY = 5;
-y = linspace(0.1,0.2,resY);
-resZ = 1;
-z = linspace(0.1,0.1,resZ);
+resX = 11;
+x = linspace(-10,10,resX);
+resY = 13;
+y = linspace(-20,20,resY);
+resZ = 2;
+z = linspace(0,10,resZ);
 
 [X, Y, Z] = meshgrid(x,y,z);
 
