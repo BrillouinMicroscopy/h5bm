@@ -65,8 +65,8 @@ public:
 	int getResolution(std::string direction);
 
 	// positions
-	void setPositions(std::string direction, std::vector<int>& positions);
-	std::vector<int> getPositions(char direction);
+	void setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims);
+	std::vector<double> getPositions(std::string direction);
 
 	// payload data
 	void setPayloadData();

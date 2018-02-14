@@ -27,6 +27,8 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 }
 
 H5BM::~H5BM() {
+	H5Gclose(payload);
+	H5Gclose(payloadData);
 	H5Fclose(file);
 }
 
@@ -58,8 +60,7 @@ void H5BM::setAttribute(std::string attrName, std::string attr, hid_t parent) {
 		if (attr_id < 0) {
 			throw(-1);
 		}
-	}
-	catch (int e) {
+	} catch (int e) {
 		attr_id = H5Acreate2(parent, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	H5Awrite(attr_id, type_id, attr.c_str());
@@ -84,8 +85,7 @@ void H5BM::setAttribute(std::string attrName, int attr, hid_t parent) {
 		if (attr_id < 0) {
 			throw(-1);
 		}
-	}
-	catch (int e) {
+	} catch (int e) {
 		attr_id = H5Acreate2(parent, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	H5Awrite(attr_id, type_id, &attr);
@@ -110,8 +110,7 @@ void H5BM::setAttribute(std::string attrName, double attr, hid_t parent) {
 		if (attr_id < 0) {
 			throw(-1);
 		}
-	}
-	catch (int e) {
+	} catch (int e) {
 		attr_id = H5Acreate2(parent, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	H5Awrite(attr_id, type_id, &attr);
@@ -144,8 +143,7 @@ std::string H5BM::getAttributeString(std::string attrName, hid_t parent) {
 		string.assign(buf, attr_size);
 		delete[] buf;
 		buf = 0;
-	}
-	catch (int e) {
+	} catch (int e) {
 		// attribute was not found
 	}
 	return string;
@@ -162,8 +160,7 @@ int H5BM::getAttributeInt(std::string attrName, hid_t parent) {
 		hsize_t attr_size = H5Aget_storage_size(attr_id);
 		hid_t attr_type = H5Aget_type(attr_id);
 		H5Aread(attr_id, attr_type, &buf);
-	}
-	catch (int e) {
+	} catch (int e) {
 		// attribute was not found
 	}
 	return buf;
@@ -180,8 +177,7 @@ double H5BM::getAttributeDouble(std::string attrName, hid_t parent) {
 		hsize_t attr_size = H5Aget_storage_size(attr_id);
 		hid_t attr_type = H5Aget_type(attr_id);
 		H5Aread(attr_id, attr_type, &buf);
-	}
-	catch (int e) {
+	} catch (int e) {
 		// attribute was not found
 	}
 	return buf;
@@ -224,4 +220,63 @@ void H5BM::setResolution(std::string direction, int resolution) {
 int H5BM::getResolution(std::string direction) {
 	direction = "resolution-" + direction;
 	return getAttributeInt(direction, payload);
+}
+
+void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
+	if (!writable) {
+		return;
+	}
+	direction = "positions-" + direction;
+	hid_t type_id = H5Tcopy(H5T_NATIVE_DOUBLE);
+	// For compatibility with MATLAB respect Fortran-style ordering: z, x, y
+	hid_t space_id = H5Screate_simple(rank, dims, dims);
+
+	hid_t dset_id;
+	try {
+		dset_id = H5Dopen2(payload, direction.c_str(), H5P_DEFAULT);
+		if (dset_id < 0) {
+			throw(-1);
+		}
+	} catch (int e) {
+		dset_id = H5Dcreate2(payload, direction.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+
+	herr_t tmp = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, positions.data());
+
+	H5Dclose(dset_id);
+	H5Sclose(space_id);
+	H5Tclose(type_id);
+}
+
+std::vector<double> H5BM::getPositions(std::string direction) {
+	direction = "positions-" + direction;
+
+	std::vector<double> positions;
+	try {
+		// open dataset
+		hid_t dset_id = H5Dopen2(payload, direction.c_str(), H5P_DEFAULT);
+		// get dataspace
+		hid_t space_id = H5Dget_space(dset_id);
+
+		// this could be used to query the dimensions
+		//int rank = H5Sget_simple_extent_ndims(space_id);
+		//hsize_t *dims_out = new hsize_t[rank];
+		//hsize_t *maxdims_out = new hsize_t[rank];
+		//H5Sget_simple_extent_dims(space_id, dims_out, maxdims_out);
+		//delete[] dims_out;
+		//delete[] maxdims_out;
+
+		// query dataspace length
+		hsize_t nrPoints = H5Sget_simple_extent_npoints(space_id);
+
+		// resize positions vector accordingly
+		positions.resize(nrPoints);
+
+		// request positions
+		H5Dread(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, positions.data());
+
+	} catch (int e) {
+		//
+	}
+	return positions;
 }
