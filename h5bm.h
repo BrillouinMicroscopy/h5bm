@@ -45,6 +45,7 @@ private:
 
 	hid_t setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims);
 	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
+	void setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date);
 	
 	std::string H5BM::calculateIndex(int indX, int indY, int indZ);
 

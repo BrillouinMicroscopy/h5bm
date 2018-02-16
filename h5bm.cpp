@@ -222,7 +222,7 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 	return positions;
 }
 
-void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
+void H5BM::setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date) {
 	if (!writable) {
 		return;
 	}
@@ -232,15 +232,19 @@ void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double
 			.toString(Qt::ISODate).toStdString();
 	}
 
-	auto ind = calculateIndex(indX, indY, indZ);
-
 	// write payload data
-	hid_t dset_id = setDataset(payloadData, data, ind, rank, dims);
+	hid_t dset_id = setDataset(parent, data, name, rank, dims);
 
 	// write payload date
 	setAttribute("date", date.c_str(), dset_id);
 
 	H5Dclose(dset_id);
+}
+
+void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
+	auto name = calculateIndex(indX, indY, indZ);
+
+	setData(data, name, payloadData, rank, dims, date);
 }
 
 std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {
