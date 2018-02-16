@@ -306,7 +306,7 @@ classdef h5bm < handle
             catch
                 dset_id = H5D.create(obj.payloadDataHandle, num2str(index), type_id, space_id, dcpl);
             end
-            H5D.write(dset_id,'H5ML_DEFAULT','H5S_ALL','H5S_ALL',plist,p.Results.data);
+            H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', plist, p.Results.data);
             
             try
                 datum = obj.parseDate(p.Results.datestring);
@@ -320,9 +320,9 @@ classdef h5bm < handle
             space_id_date = H5S.create_simple(1, 1, 1);
             acpl_id_date = H5P.create('H5P_ATTRIBUTE_CREATE');
             try
-                attr_id_date = H5A.open(dset_id,'date');
+                attr_id_date = H5A.open(dset_id, 'date');
             catch
-                attr_id_date = H5A.create(dset_id,'date', type_id_date, space_id_date, acpl_id_date);
+                attr_id_date = H5A.create(dset_id, 'date', type_id_date, space_id_date, acpl_id_date);
             end
             H5A.write(attr_id_date, type_id_date, datum);
             H5A.close(attr_id_date);
@@ -392,7 +392,7 @@ classdef h5bm < handle
             catch
                 dset_id = H5D.create(obj.backgroundDataHandle, num2str(index), type_id, space_id, dcpl);
             end
-            H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', plist,p.Results.data);
+            H5D.write(dset_id, 'H5ML_DEFAULT', 'H5S_ALL', 'H5S_ALL', plist, p.Results.data);
             
             try
                 datum = obj.parseDate(p.Results.datestring);
@@ -435,7 +435,7 @@ classdef h5bm < handle
             elseif strcmp(type, 'date')
                 try
                     dset_id = H5D.open(obj.backgroundDataHandle, num2str(index));
-                    attr_id = H5A.open(dset_id,'date');
+                    attr_id = H5A.open(dset_id, 'date');
                     data = H5A.read(attr_id);
                     data = transpose(data);
                 catch
@@ -613,7 +613,7 @@ classdef h5bm < handle
             end
         end
         
-        %% Get handle for payload group
+        %% Get handle for calibration group
         function group_id = calibrationHandle (obj)
             try
                 group_id = H5G.open(obj.fileHandle, 'calibration');
