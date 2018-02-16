@@ -46,7 +46,8 @@ private:
 	hid_t setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims);
 	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
 
-	void setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date);
+	void setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
+		std::string date, std::string sample = "", double shift = NULL);
 	std::vector<double> getData(std::string name, hid_t parent);
 	std::string getDate(std::string name, hid_t parent);
 	
@@ -91,8 +92,11 @@ public:
 	std::string getBackgroundDate();
 
 	// calibration data
-	void setCalibrationData();
-	void getCalibrationData();
+	void setCalibrationData(int index, const std::vector<double> data, const int rank, const hsize_t *dims, std::string sample, double shift, std::string date = "now");
+	std::vector<double> getCalibrationData(int index);
+	std::string getCalibrationDate(int index);
+	std::string getCalibrationSample(int index);
+	double getCalibrationShift(int index);
 
 };
 

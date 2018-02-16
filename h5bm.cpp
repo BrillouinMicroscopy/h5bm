@@ -29,6 +29,10 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 H5BM::~H5BM() {
 	H5Gclose(payload);
 	H5Gclose(payloadData);
+	H5Gclose(background);
+	H5Gclose(backgroundData);
+	H5Gclose(calibration);
+	H5Gclose(calibrationData);
 	H5Fclose(file);
 }
 
@@ -52,9 +56,9 @@ void H5BM::getGroupHandles(bool create) {
 		backgroundData = H5Gcreate2(background, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	// calibration handles
-	calibration = H5Gopen2(file, "payload", H5P_DEFAULT);
+	calibration = H5Gopen2(file, "calibration", H5P_DEFAULT);
 	if (calibration < 0 && create) {
-		calibration = H5Gcreate2(file, "payload", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+		calibration = H5Gcreate2(file, "calibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	calibrationData = H5Gopen2(calibration, "data", H5P_DEFAULT);
 	if (calibrationData < 0 && create) {
@@ -240,7 +244,7 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 	return positions;
 }
 
-void H5BM::setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date) {
+void H5BM::setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date, std::string sample, double shift) {
 	if (!writable) {
 		return;
 	}
@@ -250,11 +254,21 @@ void H5BM::setData(std::vector<double> data, std::string name, hid_t parent, con
 			.toString(Qt::ISODate).toStdString();
 	}
 
-	// write payload data
+	// write data
 	hid_t dset_id = setDataset(parent, data, name, rank, dims);
 
-	// write payload date
+	// write date
 	setAttribute("date", date.c_str(), dset_id);
+
+	// write sample name
+	if (sample != "") {
+		setAttribute("sample", sample.c_str(), dset_id);
+	}
+
+	// write sample name
+	if (shift != NULL) {
+		setAttribute("shift", shift, dset_id);
+	}
 
 	H5Dclose(dset_id);
 }
@@ -318,4 +332,24 @@ std::vector<double> H5BM::getBackgroundData() {
 
 std::string H5BM::getBackgroundDate() {
 	return getDate("1", backgroundData);
+}
+
+void H5BM::setCalibrationData(int index, const std::vector<double> data, const int rank, const hsize_t * dims, std::string sample, double shift, std::string date) {
+	setData(data, std::to_string(index), calibrationData, rank, dims, date, sample, shift);
+}
+
+std::vector<double> H5BM::getCalibrationData(int index) {
+	return std::vector<double>();
+}
+
+std::string H5BM::getCalibrationDate(int index) {
+	return std::string();
+}
+
+std::string H5BM::getCalibrationSample(int index) {
+	return std::string();
+}
+
+double H5BM::getCalibrationShift(int index) {
+	return 0.0;
 }
