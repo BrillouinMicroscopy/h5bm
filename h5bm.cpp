@@ -44,12 +44,8 @@ void H5BM::getGroupHandles(bool create) {
 	}
 }
 
-void H5BM::setAttribute(std::string attrName, std::string attr, hid_t parent) {
-	if (!writable) {
-		return;
-	}
-	hid_t type_id = H5Tcopy(H5T_C_S1);
-	H5Tset_size(type_id, attr.length());
+template<typename T>
+void H5BM::setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t type_id) {
 	hsize_t dims[1] = { 1 };
 	hsize_t maxdims[1] = { 1 };
 	hid_t space_id = H5Screate_simple(1, dims, maxdims);
@@ -60,75 +56,35 @@ void H5BM::setAttribute(std::string attrName, std::string attr, hid_t parent) {
 		if (attr_id < 0) {
 			throw(-1);
 		}
-	} catch (int e) {
+	}
+	catch (int e) {
 		attr_id = H5Acreate2(parent, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
 	}
-	H5Awrite(attr_id, type_id, attr.c_str());
+	H5Awrite(attr_id, type_id, attrValue);
 	H5Aclose(attr_id);
 	H5Pclose(acpl_id);
 	H5Sclose(space_id);
 	H5Tclose(type_id);
+}
+
+void H5BM::setAttribute(std::string attrName, std::string attr, hid_t parent) {
+	hid_t type_id = H5Tcopy(H5T_C_S1);
+	H5Tset_size(type_id, attr.length());
+	setAttribute(attrName, attr.c_str(), parent, type_id);
 }
 
 void H5BM::setAttribute(std::string attrName, int attr, hid_t parent) {
-	if (!writable) {
-		return;
-	}
 	hid_t type_id = H5Tcopy(H5T_NATIVE_INT);
-	hsize_t dims[1] = { 1 };
-	hsize_t maxdims[1] = { 1 };
-	hid_t space_id = H5Screate_simple(1, dims, maxdims);
-	hid_t acpl_id = H5Pcreate(H5P_ATTRIBUTE_CREATE);
-	hid_t attr_id;
-	try {
-		attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
-		if (attr_id < 0) {
-			throw(-1);
-		}
-	} catch (int e) {
-		attr_id = H5Acreate2(parent, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	}
-	H5Awrite(attr_id, type_id, &attr);
-	H5Aclose(attr_id);
-	H5Pclose(acpl_id);
-	H5Sclose(space_id);
-	H5Tclose(type_id);
+	setAttribute(attrName, &attr, parent, type_id);
 }
 
 void H5BM::setAttribute(std::string attrName, double attr, hid_t parent) {
-	if (!writable) {
-		return;
-	}
 	hid_t type_id = H5Tcopy(H5T_NATIVE_DOUBLE);
-	hsize_t dims[1] = { 1 };
-	hsize_t maxdims[1] = { 1 };
-	hid_t space_id = H5Screate_simple(1, dims, maxdims);
-	hid_t acpl_id = H5Pcreate(H5P_ATTRIBUTE_CREATE);
-	hid_t attr_id;
-	try {
-		attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
-		if (attr_id < 0) {
-			throw(-1);
-		}
-	} catch (int e) {
-		attr_id = H5Acreate2(parent, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
-	}
-	H5Awrite(attr_id, type_id, &attr);
-	H5Aclose(attr_id);
-	H5Pclose(acpl_id);
-	H5Sclose(space_id);
-	H5Tclose(type_id);
+	setAttribute(attrName, &attr, parent, type_id);
 }
 
-void H5BM::setAttribute(std::string attrName, std::string attr) {
-	setAttribute(attrName, attr, file);
-}
-
-void H5BM::setAttribute(std::string attrName, int attr) {
-	setAttribute(attrName, attr, file);
-}
-
-void H5BM::setAttribute(std::string attrName, double attr) {
+template<typename T>
+void H5BM::setAttribute(std::string attrName, T attr) {
 	setAttribute(attrName, attr, file);
 }
 

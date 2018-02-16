@@ -27,12 +27,15 @@ private:
 	void getGroupHandles(bool create = FALSE);
 
 	// set/get attribute
+
+	template<typename T>
+	void setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t type_id);
 	void setAttribute(std::string attrName, std::string attr, hid_t parent);
 	void setAttribute(std::string attrName, int attr, hid_t parent);
 	void setAttribute(std::string attrName, double attr, hid_t parent);
-	void setAttribute(std::string attrName, std::string attr);
-	void setAttribute(std::string attrName, int attr);
-	void setAttribute(std::string attrName, double attr);
+	template<typename T>
+	void setAttribute(std::string attrName, T attr);
+
 	std::string getAttributeString(std::string attrName, hid_t parent);
 	std::string getAttributeString(std::string attrName);
 	int getAttributeInt(std::string attrName, hid_t parent);
