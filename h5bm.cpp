@@ -60,9 +60,10 @@ void H5BM::getGroupHandles(bool create) {
 	if (calibration < 0 && create) {
 		calibration = H5Gcreate2(file, "calibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
-	calibrationData = H5Gopen2(calibration, "data", H5P_DEFAULT);
+	// legacy: this should actually be named "data" only
+	calibrationData = H5Gopen2(calibration, "calibrationData", H5P_DEFAULT);
 	if (calibrationData < 0 && create) {
-		calibrationData = H5Gcreate2(calibration, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+		calibrationData = H5Gcreate2(calibration, "calibrationData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 }
 
@@ -323,15 +324,16 @@ std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
 }
 
 void H5BM::setBackgroundData(const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
-	setData(data, "1", backgroundData, rank, dims, date);
+	// legacy: this should actually be stored under "backgroundData"
+	setData(data, "1", background, rank, dims, date);
 }
 
 std::vector<double> H5BM::getBackgroundData() {
-	return getData("1", backgroundData);
+	return getData("1", background);
 }
 
 std::string H5BM::getBackgroundDate() {
-	return getDate("1", backgroundData);
+	return getDate("1", background);
 }
 
 void H5BM::setCalibrationData(int index, const std::vector<double> data, const int rank, const hsize_t * dims, std::string sample, double shift, std::string date) {
