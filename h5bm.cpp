@@ -161,30 +161,38 @@ int H5BM::getResolution(std::string direction) {
 	return getAttribute<int>(direction, payload);
 }
 
-void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
-	if (!writable) {
-		return;
-	}
-	direction = "positions-" + direction;
+hid_t H5BM::setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims) {
 	hid_t type_id = H5Tcopy(H5T_NATIVE_DOUBLE);
 	// For compatibility with MATLAB respect Fortran-style ordering: z, x, y
 	hid_t space_id = H5Screate_simple(rank, dims, dims);
 
 	hid_t dset_id;
 	try {
-		dset_id = H5Dopen2(payload, direction.c_str(), H5P_DEFAULT);
+		dset_id = H5Dopen2(parent, name.c_str(), H5P_DEFAULT);
 		if (dset_id < 0) {
 			throw(-1);
 		}
-	} catch (int e) {
-		dset_id = H5Dcreate2(payload, direction.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	catch (int e) {
+		dset_id = H5Dcreate2(parent, name.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 
-	herr_t tmp = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, positions.data());
+	H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
 
-	H5Dclose(dset_id);
 	H5Sclose(space_id);
 	H5Tclose(type_id);
+
+	return dset_id;
+}
+
+void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
+	if (!writable) {
+		return;
+	}
+	direction = "positions-" + direction;
+
+	hid_t dset_id = H5BM::setDataset(payload, positions, direction, rank, dims);
+	H5Dclose(dset_id);
 }
 
 std::vector<double> H5BM::getPositions(std::string direction) {
@@ -237,29 +245,13 @@ void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double
 	int index = (indZ*(resolutionX*resolutionY) + indY*resolutionX + indX);
 	auto ind = std::to_string(index);
 
-	// write payload dataset
-	hid_t type_id = H5Tcopy(H5T_NATIVE_DOUBLE);
-	// For compatibility with MATLAB respect Fortran-style ordering: z, x, y
-	hid_t space_id = H5Screate_simple(rank, dims, dims);
-
-	hid_t dset_id;
-	try {
-		dset_id = H5Dopen2(payloadData, ind.c_str(), H5P_DEFAULT);
-		if (dset_id < 0) {
-			throw(-1);
-		}
-	} catch (int e) {
-		dset_id = H5Dcreate2(payloadData, ind.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-	}
-
-	herr_t tmp = H5Dwrite(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
+	// write payload data
+	hid_t dset_id = H5BM::setDataset(payloadData, data, ind, rank, dims);
 
 	// write payload date
 	setAttribute("date", date.c_str(), dset_id);
 
 	H5Dclose(dset_id);
-	H5Sclose(space_id);
-	H5Tclose(type_id);
 }
 
 std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {

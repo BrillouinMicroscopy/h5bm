@@ -43,6 +43,8 @@ private:
 	template<typename T>
 	T getAttribute(std::string attrName);
 
+	hid_t setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims);
+
 public:
 	H5BM(
 		QObject *parent = 0,
