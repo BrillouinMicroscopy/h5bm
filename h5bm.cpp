@@ -88,13 +88,29 @@ void H5BM::setAttribute(std::string attrName, T attr) {
 	setAttribute(attrName, attr, file);
 }
 
-std::string H5BM::getAttributeString(std::string attrName, hid_t parent) {
+template<typename T>
+T H5BM::getAttribute(std::string attrName, hid_t parent) {
+	T buf;
+	try {
+		hid_t attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
+		hsize_t attr_size = H5Aget_storage_size(attr_id);
+		hid_t attr_type = H5Aget_type(attr_id);
+		H5Aread(attr_id, attr_type, &buf);
+	}
+	catch (int e) {
+		// attribute was not found
+	}
+	return buf;
+}
+
+template<>
+std::string H5BM::getAttribute(std::string attrName, hid_t parent) {
 	std::string string = "";
 	try {
 		hid_t attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
 		hsize_t attr_size = H5Aget_storage_size(attr_id);
-		char *buf = new char[attr_size + 1];
 		hid_t attr_type = H5Aget_type(attr_id);
+		char *buf = new char[attr_size + 1];
 		H5Aread(attr_id, attr_type, buf);
 		string.assign(buf, attr_size);
 		delete[] buf;
@@ -105,42 +121,9 @@ std::string H5BM::getAttributeString(std::string attrName, hid_t parent) {
 	return string;
 }
 
-std::string H5BM::getAttributeString(std::string attrName) {
-	return getAttributeString(attrName, file);
-}
-
-int H5BM::getAttributeInt(std::string attrName, hid_t parent) {
-	int buf;
-	try {
-		hid_t attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
-		hsize_t attr_size = H5Aget_storage_size(attr_id);
-		hid_t attr_type = H5Aget_type(attr_id);
-		H5Aread(attr_id, attr_type, &buf);
-	} catch (int e) {
-		// attribute was not found
-	}
-	return buf;
-}
-
-int H5BM::getAttributeInt(std::string attrName) {
-	return getAttributeInt(attrName, file);
-}
-
-double H5BM::getAttributeDouble(std::string attrName, hid_t parent) {
-	double buf;
-	try {
-		hid_t attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
-		hsize_t attr_size = H5Aget_storage_size(attr_id);
-		hid_t attr_type = H5Aget_type(attr_id);
-		H5Aread(attr_id, attr_type, &buf);
-	} catch (int e) {
-		// attribute was not found
-	}
-	return buf;
-}
-
-double H5BM::getAttributeDouble(std::string attrName) {
-	return getAttributeDouble(attrName, file);
+template<typename T>
+T H5BM::getAttribute(std::string attrName) {
+	return getAttribute<T>(attrName, file);
 }
 
 void H5BM::setDate(std::string date) {
@@ -150,12 +133,12 @@ void H5BM::setDate(std::string date) {
 
 std::string H5BM::getDate() {
 	std::string attrName = "date";
-	return getAttributeString(attrName);
+	return getAttribute<std::string>(attrName);
 }
 
 std::string H5BM::getVersion() {
 	std::string attrName = "version";
-	return getAttributeString(attrName);
+	return getAttribute<std::string>(attrName);
 }
 
 void H5BM::setComment(std::string comment) {
@@ -165,7 +148,7 @@ void H5BM::setComment(std::string comment) {
 
 std::string H5BM::getComment() {
 	std::string attrName = "comment";
-	return getAttributeString(attrName);
+	return getAttribute<std::string>(attrName);
 }
 
 void H5BM::setResolution(std::string direction, int resolution) {
@@ -175,7 +158,7 @@ void H5BM::setResolution(std::string direction, int resolution) {
 
 int H5BM::getResolution(std::string direction) {
 	direction = "resolution-" + direction;
-	return getAttributeInt(direction, payload);
+	return getAttribute<int>(direction, payload);
 }
 
 void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {

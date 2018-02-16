@@ -36,12 +36,12 @@ private:
 	template<typename T>
 	void setAttribute(std::string attrName, T attr);
 
-	std::string getAttributeString(std::string attrName, hid_t parent);
-	std::string getAttributeString(std::string attrName);
-	int getAttributeInt(std::string attrName, hid_t parent);
-	int getAttributeInt(std::string attrName);
-	double getAttributeDouble(std::string attrName, hid_t parent);
-	double getAttributeDouble(std::string attrName);
+	template<typename T>
+	T getAttribute(std::string attrName, hid_t parent);
+	template<>
+	std::string getAttribute(std::string attrName, hid_t parent);
+	template<typename T>
+	T getAttribute(std::string attrName);
 
 public:
 	H5BM(
