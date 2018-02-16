@@ -185,13 +185,28 @@ hid_t H5BM::setDataset(hid_t parent, std::vector<double> data, std::string name,
 	return dset_id;
 }
 
+void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name) {
+	hid_t dset_id = H5Dopen2(parent, name.c_str(), H5P_DEFAULT);
+
+	// get dataspace
+	hid_t space_id = H5Dget_space(dset_id);
+
+	// query dataspace length
+	hsize_t nrPoints = H5Sget_simple_extent_npoints(space_id);
+
+	// resize positions vector accordingly
+	data->resize(nrPoints);
+
+	H5Dread(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->data());
+}
+
 void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
 	if (!writable) {
 		return;
 	}
 	direction = "positions-" + direction;
 
-	hid_t dset_id = H5BM::setDataset(payload, positions, direction, rank, dims);
+	hid_t dset_id = setDataset(payload, positions, direction, rank, dims);
 	H5Dclose(dset_id);
 }
 
@@ -200,28 +215,7 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 
 	std::vector<double> positions;
 	try {
-		// open dataset
-		hid_t dset_id = H5Dopen2(payload, direction.c_str(), H5P_DEFAULT);
-		// get dataspace
-		hid_t space_id = H5Dget_space(dset_id);
-
-		// this could be used to query the dimensions
-		//int rank = H5Sget_simple_extent_ndims(space_id);
-		//hsize_t *dims_out = new hsize_t[rank];
-		//hsize_t *maxdims_out = new hsize_t[rank];
-		//H5Sget_simple_extent_dims(space_id, dims_out, maxdims_out);
-		//delete[] dims_out;
-		//delete[] maxdims_out;
-
-		// query dataspace length
-		hsize_t nrPoints = H5Sget_simple_extent_npoints(space_id);
-
-		// resize positions vector accordingly
-		positions.resize(nrPoints);
-
-		// request positions
-		H5Dread(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, positions.data());
-
+		getDataset(&positions, payload, direction);
 	} catch (int e) {
 		//
 	}
@@ -238,15 +232,10 @@ void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double
 			.toString(Qt::ISODate).toStdString();
 	}
 
-	int resolutionX = getResolution("x");
-	int resolutionY = getResolution("y");
-	int resolutionZ = getResolution("z");
-
-	int index = (indZ*(resolutionX*resolutionY) + indY*resolutionX + indX);
-	auto ind = std::to_string(index);
+	auto ind = calculateIndex(indX, indY, indZ);
 
 	// write payload data
-	hid_t dset_id = H5BM::setDataset(payloadData, data, ind, rank, dims);
+	hid_t dset_id = setDataset(payloadData, data, ind, rank, dims);
 
 	// write payload date
 	setAttribute("date", date.c_str(), dset_id);
@@ -255,11 +244,37 @@ void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double
 }
 
 std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {
+	auto ind = calculateIndex(indX, indY, indZ);
+
 	std::vector<double> data;
+	try {
+		getDataset(&data, payloadData, ind);
+	} catch (int e) {
+		//
+	}
 	return data;
 }
 
 std::string H5BM::getPayloadDate(int indX, int indY, int indZ) {
+	auto ind = calculateIndex(indX, indY, indZ);
+
 	std::string date;
+	try {
+		hid_t dset_id = H5Dopen2(payloadData, ind.c_str(), H5P_DEFAULT);;
+		date = getAttribute<std::string>("date", dset_id);
+		H5Dclose(dset_id);
+	}
+	catch (int e) {
+		//
+	}
 	return date;
+}
+
+std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
+	int resolutionX = getResolution("x");
+	int resolutionY = getResolution("y");
+	int resolutionZ = getResolution("z");
+
+	int index = (indZ*(resolutionX*resolutionY) + indY * resolutionX + indX);
+	return std::to_string(index);
 }
