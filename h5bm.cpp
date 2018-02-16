@@ -42,6 +42,24 @@ void H5BM::getGroupHandles(bool create) {
 	if (payloadData < 0 && create) {
 		payloadData = H5Gcreate2(payload, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
+	// background handles
+	background = H5Gopen2(file, "background", H5P_DEFAULT);
+	if (background < 0 && create) {
+		background = H5Gcreate2(file, "background", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	backgroundData = H5Gopen2(background, "data", H5P_DEFAULT);
+	if (backgroundData < 0 && create) {
+		backgroundData = H5Gcreate2(background, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	// calibration handles
+	calibration = H5Gopen2(file, "payload", H5P_DEFAULT);
+	if (calibration < 0 && create) {
+		calibration = H5Gcreate2(file, "payload", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+	calibrationData = H5Gopen2(calibration, "data", H5P_DEFAULT);
+	if (calibrationData < 0 && create) {
+		calibrationData = H5Gcreate2(calibration, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
 }
 
 template<typename T>
@@ -241,30 +259,21 @@ void H5BM::setData(std::vector<double> data, std::string name, hid_t parent, con
 	H5Dclose(dset_id);
 }
 
-void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
-	auto name = calculateIndex(indX, indY, indZ);
-
-	setData(data, name, payloadData, rank, dims, date);
-}
-
-std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {
-	auto ind = calculateIndex(indX, indY, indZ);
-
+std::vector<double> H5BM::getData(std::string name, hid_t parent) {
 	std::vector<double> data;
 	try {
-		getDataset(&data, payloadData, ind);
-	} catch (int e) {
+		getDataset(&data, parent, name);
+	}
+	catch (int e) {
 		//
 	}
 	return data;
 }
 
-std::string H5BM::getPayloadDate(int indX, int indY, int indZ) {
-	auto ind = calculateIndex(indX, indY, indZ);
-
+std::string H5BM::getDate(std::string name, hid_t parent) {
 	std::string date;
 	try {
-		hid_t dset_id = H5Dopen2(payloadData, ind.c_str(), H5P_DEFAULT);;
+		hid_t dset_id = H5Dopen2(parent, name.c_str(), H5P_DEFAULT);;
 		date = getAttribute<std::string>("date", dset_id);
 		H5Dclose(dset_id);
 	}
@@ -274,6 +283,22 @@ std::string H5BM::getPayloadDate(int indX, int indY, int indZ) {
 	return date;
 }
 
+void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
+	auto name = calculateIndex(indX, indY, indZ);
+
+	setData(data, name, payloadData, rank, dims, date);
+}
+
+std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {
+	auto name = calculateIndex(indX, indY, indZ);
+	return getData(name, payloadData);
+}
+
+std::string H5BM::getPayloadDate(int indX, int indY, int indZ) {
+	auto name = calculateIndex(indX, indY, indZ);
+	return getDate(name, payloadData);
+}
+
 std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
 	int resolutionX = getResolution("x");
 	int resolutionY = getResolution("y");
@@ -281,4 +306,16 @@ std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
 
 	int index = (indZ*(resolutionX*resolutionY) + indY * resolutionX + indX);
 	return std::to_string(index);
+}
+
+void H5BM::setBackgroundData(const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
+	setData(data, "1", backgroundData, rank, dims, date);
+}
+
+std::vector<double> H5BM::getBackgroundData() {
+	return getData("1", backgroundData);
+}
+
+std::string H5BM::getBackgroundDate() {
+	return getDate("1", backgroundData);
 }

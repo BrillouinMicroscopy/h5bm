@@ -45,9 +45,12 @@ private:
 
 	hid_t setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims);
 	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
+
 	void setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date);
+	std::vector<double> getData(std::string name, hid_t parent);
+	std::string getDate(std::string name, hid_t parent);
 	
-	std::string H5BM::calculateIndex(int indX, int indY, int indZ);
+	std::string calculateIndex(int indX, int indY, int indZ);
 
 public:
 	H5BM(
@@ -83,8 +86,9 @@ public:
 	std::string getPayloadDate(int indX, int indY, int indZ);
 
 	// background data
-	void setBackgroundData();
-	void getBackgroundData();
+	void setBackgroundData(const std::vector<double> data, const int rank, const hsize_t *dims, std::string date = "now");
+	std::vector<double> getBackgroundData();
+	std::string getBackgroundDate();
 
 	// calibration data
 	void setCalibrationData();
