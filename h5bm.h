@@ -69,8 +69,9 @@ public:
 	std::vector<double> getPositions(std::string direction);
 
 	// payload data
-	void setPayloadData();
-	void getPayloadData();
+	void setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date = "now");
+	std::vector<double> getPayloadData(int indX, int indY, int indZ);
+	std::string getPayloadDate(int indX, int indY, int indZ);
 
 	// background data
 	void setBackgroundData();
