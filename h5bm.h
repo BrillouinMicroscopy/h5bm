@@ -10,19 +10,19 @@ class H5BM : public QObject {
 	Q_OBJECT
 
 private:
-	bool writable = FALSE;
+	bool m_writable = FALSE;
 
-	const std::string versionstring = "H5BM-v0.0.3";
-	hid_t file;		// handle to the opened file
+	const std::string m_versionstring = "H5BM-v0.0.3";
+	hid_t m_file;		// handle to the opened file
 
-	hid_t payload;
-	hid_t payloadData;
+	hid_t m_payload;
+	hid_t m_payloadData;
 
-	hid_t calibration;
-	hid_t calibrationData;
+	hid_t m_calibration;
+	hid_t m_calibrationData;
 
-	hid_t background;
-	hid_t backgroundData;
+	hid_t m_background;
+	hid_t m_backgroundData;
 
 	void getGroupHandles(bool create = FALSE);
 

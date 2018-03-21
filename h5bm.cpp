@@ -7,63 +7,63 @@ using namespace std::experimental::filesystem::v1;
 H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 	: QObject(parent) {
 	if (flags == H5F_ACC_RDONLY) {
-		writable = FALSE;
+		m_writable = FALSE;
 		if (exists(filename)) {
-			file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
+			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 			getGroupHandles(FALSE);
 		}
 	} else if (flags == H5F_ACC_RDWR) {
-		writable = TRUE;
+		m_writable = TRUE;
 		if (!exists(filename)) {
 			// create the file
-			file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+			m_file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
 			// set the version attribute
-			setAttribute("version", versionstring);
+			setAttribute("version", m_versionstring);
 		} else {
-			file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
+			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
 		getGroupHandles(TRUE);
 	}
 }
 
 H5BM::~H5BM() {
-	H5Gclose(payload);
-	H5Gclose(payloadData);
-	H5Gclose(background);
-	H5Gclose(backgroundData);
-	H5Gclose(calibration);
-	H5Gclose(calibrationData);
-	H5Fclose(file);
+	H5Gclose(m_payload);
+	H5Gclose(m_payloadData);
+	H5Gclose(m_background);
+	H5Gclose(m_backgroundData);
+	H5Gclose(m_calibration);
+	H5Gclose(m_calibrationData);
+	H5Fclose(m_file);
 }
 
 void H5BM::getGroupHandles(bool create) {
 	// payload handles
-	payload = H5Gopen2(file, "payload", H5P_DEFAULT);
-	if (payload < 0 && create) {
-		payload = H5Gcreate2(file, "payload", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	m_payload = H5Gopen2(m_file, "payload", H5P_DEFAULT);
+	if (m_payload < 0 && create) {
+		m_payload = H5Gcreate2(m_file, "payload", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
-	payloadData = H5Gopen2(payload, "data", H5P_DEFAULT);
-	if (payloadData < 0 && create) {
-		payloadData = H5Gcreate2(payload, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	m_payloadData = H5Gopen2(m_payload, "data", H5P_DEFAULT);
+	if (m_payloadData < 0 && create) {
+		m_payloadData = H5Gcreate2(m_payload, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	// background handles
-	background = H5Gopen2(file, "background", H5P_DEFAULT);
-	if (background < 0 && create) {
-		background = H5Gcreate2(file, "background", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	m_background = H5Gopen2(m_file, "background", H5P_DEFAULT);
+	if (m_background < 0 && create) {
+		m_background = H5Gcreate2(m_file, "background", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
-	backgroundData = H5Gopen2(background, "data", H5P_DEFAULT);
-	if (backgroundData < 0 && create) {
-		backgroundData = H5Gcreate2(background, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	m_backgroundData = H5Gopen2(m_background, "data", H5P_DEFAULT);
+	if (m_backgroundData < 0 && create) {
+		m_backgroundData = H5Gcreate2(m_background, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	// calibration handles
-	calibration = H5Gopen2(file, "calibration", H5P_DEFAULT);
-	if (calibration < 0 && create) {
-		calibration = H5Gcreate2(file, "calibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	m_calibration = H5Gopen2(m_file, "calibration", H5P_DEFAULT);
+	if (m_calibration < 0 && create) {
+		m_calibration = H5Gcreate2(m_file, "calibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	// legacy: this should actually be named "data" only
-	calibrationData = H5Gopen2(calibration, "calibrationData", H5P_DEFAULT);
-	if (calibrationData < 0 && create) {
-		calibrationData = H5Gcreate2(calibration, "calibrationData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	m_calibrationData = H5Gopen2(m_calibration, "calibrationData", H5P_DEFAULT);
+	if (m_calibrationData < 0 && create) {
+		m_calibrationData = H5Gcreate2(m_calibration, "calibrationData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 }
 
@@ -108,7 +108,7 @@ void H5BM::setAttribute(std::string attrName, double attr, hid_t parent) {
 
 template<typename T>
 void H5BM::setAttribute(std::string attrName, T attr) {
-	setAttribute(attrName, attr, file);
+	setAttribute(attrName, attr, m_file);
 }
 
 template<typename T>
@@ -146,7 +146,7 @@ std::string H5BM::getAttribute(std::string attrName, hid_t parent) {
 
 template<typename T>
 T H5BM::getAttribute(std::string attrName) {
-	return getAttribute<T>(attrName, file);
+	return getAttribute<T>(attrName, m_file);
 }
 
 void H5BM::setDate(std::string date) {
@@ -176,12 +176,12 @@ std::string H5BM::getComment() {
 
 void H5BM::setResolution(std::string direction, int resolution) {
 	direction = "resolution-" + direction;
-	setAttribute(direction, resolution, payload);
+	setAttribute(direction, resolution, m_payload);
 }
 
 int H5BM::getResolution(std::string direction) {
 	direction = "resolution-" + direction;
-	return getAttribute<int>(direction, payload);
+	return getAttribute<int>(direction, m_payload);
 }
 
 hid_t H5BM::setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims) {
@@ -224,12 +224,12 @@ void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name)
 }
 
 void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
-	if (!writable) {
+	if (!m_writable) {
 		return;
 	}
 	direction = "positions-" + direction;
 
-	hid_t dset_id = setDataset(payload, positions, direction, rank, dims);
+	hid_t dset_id = setDataset(m_payload, positions, direction, rank, dims);
 	H5Dclose(dset_id);
 }
 
@@ -238,7 +238,7 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 
 	std::vector<double> positions;
 	try {
-		getDataset(&positions, payload, direction);
+		getDataset(&positions, m_payload, direction);
 	} catch (int e) {
 		//
 	}
@@ -246,7 +246,7 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 }
 
 void H5BM::setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date, std::string sample, double shift) {
-	if (!writable) {
+	if (!m_writable) {
 		return;
 	}
 
@@ -301,17 +301,17 @@ std::string H5BM::getDate(std::string name, hid_t parent) {
 void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
 	auto name = calculateIndex(indX, indY, indZ);
 
-	setData(data, name, payloadData, rank, dims, date);
+	setData(data, name, m_payloadData, rank, dims, date);
 }
 
 std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {
 	auto name = calculateIndex(indX, indY, indZ);
-	return getData(name, payloadData);
+	return getData(name, m_payloadData);
 }
 
 std::string H5BM::getPayloadDate(int indX, int indY, int indZ) {
 	auto name = calculateIndex(indX, indY, indZ);
-	return getDate(name, payloadData);
+	return getDate(name, m_payloadData);
 }
 
 std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
@@ -325,19 +325,19 @@ std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
 
 void H5BM::setBackgroundData(const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
 	// legacy: this should actually be stored under "backgroundData"
-	setData(data, "1", background, rank, dims, date);
+	setData(data, "1", m_background, rank, dims, date);
 }
 
 std::vector<double> H5BM::getBackgroundData() {
-	return getData("1", background);
+	return getData("1", m_background);
 }
 
 std::string H5BM::getBackgroundDate() {
-	return getDate("1", background);
+	return getDate("1", m_background);
 }
 
 void H5BM::setCalibrationData(int index, const std::vector<double> data, const int rank, const hsize_t * dims, std::string sample, double shift, std::string date) {
-	setData(data, std::to_string(index), calibrationData, rank, dims, date, sample, shift);
+	setData(data, std::to_string(index), m_calibrationData, rank, dims, date, sample, shift);
 }
 
 std::vector<double> H5BM::getCalibrationData(int index) {
