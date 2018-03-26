@@ -119,6 +119,7 @@ T H5BM::getAttribute(std::string attrName, hid_t parent) {
 		hsize_t attr_size = H5Aget_storage_size(attr_id);
 		hid_t attr_type = H5Aget_type(attr_id);
 		H5Aread(attr_id, attr_type, &buf);
+		H5Aclose(attr_id);
 	}
 	catch (int e) {
 		// attribute was not found
@@ -138,6 +139,7 @@ std::string H5BM::getAttribute(std::string attrName, hid_t parent) {
 		string.assign(buf, attr_size);
 		delete[] buf;
 		buf = 0;
+		H5Aclose(attr_id);
 	} catch (int e) {
 		// attribute was not found
 	}
@@ -221,6 +223,7 @@ void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name)
 	data->resize(nrPoints);
 
 	H5Dread(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->data());
+	H5Dclose(dset_id);
 }
 
 void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
