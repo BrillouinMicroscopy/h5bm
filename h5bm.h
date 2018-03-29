@@ -24,6 +24,27 @@ private:
 	hid_t m_background;
 	hid_t m_backgroundData;
 
+	template<class T>
+	inline hid_t get_memtype();
+
+	#define HDF5_WRAPPER_SPECIALIZE_TYPE(T, tid) \
+	template<> inline hid_t get_memtype<T>() { \
+		return H5Tcopy(tid); \
+	} \
+
+	HDF5_WRAPPER_SPECIALIZE_TYPE(int, H5T_NATIVE_INT)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned int, H5T_NATIVE_UINT)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned short, H5T_NATIVE_USHORT)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long long, H5T_NATIVE_ULLONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(long long, H5T_NATIVE_LLONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(char, H5T_NATIVE_CHAR)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned char, H5T_NATIVE_UCHAR)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(float, H5T_NATIVE_FLOAT)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(double, H5T_NATIVE_DOUBLE)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(bool, H5T_NATIVE_CHAR)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long, H5T_NATIVE_ULONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(long, H5T_NATIVE_LONG)
+
 	void getGroupHandles(bool create = FALSE);
 
 	// set/get attribute
@@ -43,8 +64,8 @@ private:
 	template<typename T>
 	T getAttribute(std::string attrName);
 
-	hid_t setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims);
-	hid_t setDataset(hid_t parent, std::vector<unsigned short> data, std::string name, const int rank, const hsize_t *dims);
+	template <typename T>
+	hid_t setDataset(hid_t parent, std::vector<T> data, std::string name, const int rank, const hsize_t *dims);
 	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
 
 	template <typename T>
@@ -103,6 +124,31 @@ public:
 	double getCalibrationShift(int index);
 
 };
+
+template <typename T>
+hid_t H5BM::setDataset(hid_t parent, std::vector<T> data, std::string name, const int rank, const hsize_t *dims) {
+	hid_t type_id = get_memtype<T>();
+	// For compatibility with MATLAB respect Fortran-style ordering: z, x, y
+	hid_t space_id = H5Screate_simple(rank, dims, dims);
+
+	hid_t dset_id;
+	try {
+		dset_id = H5Dopen2(parent, name.c_str(), H5P_DEFAULT);
+		if (dset_id < 0) {
+			throw(-1);
+		}
+	}
+	catch (int e) {
+		dset_id = H5Dcreate2(parent, name.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	}
+
+	H5Dwrite(dset_id, get_memtype<T>(), H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
+
+	H5Sclose(space_id);
+	H5Tclose(type_id);
+
+	return dset_id;
+}
 
 template <typename T>
 void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
