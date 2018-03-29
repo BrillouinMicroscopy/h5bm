@@ -47,10 +47,10 @@ private:
 	hid_t setDataset(hid_t parent, std::vector<unsigned short> data, std::string name, const int rank, const hsize_t *dims);
 	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
 
-	void setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
+	template <typename T>
+	void setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
 		std::string date, std::string sample = "", double shift = NULL);
-	void setData(std::vector<unsigned short> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
-		std::string date, std::string sample = "", double shift = NULL);
+
 	std::vector<double> getData(std::string name, hid_t parent);
 	std::string getDate(std::string name, hid_t parent);
 	
@@ -85,8 +85,8 @@ public:
 	std::vector<double> getPositions(std::string direction);
 
 	// payload data
-	void setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date = "now");
-	void setPayloadData(int indX, int indY, int indZ, const std::vector<unsigned short> data, const int rank, const hsize_t *dims, std::string date = "now");
+	template <typename T>
+	void setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now");
 	std::vector<double> getPayloadData(int indX, int indY, int indZ);
 	std::string getPayloadDate(int indX, int indY, int indZ);
 
@@ -103,5 +103,43 @@ public:
 	double getCalibrationShift(int index);
 
 };
+
+template <typename T>
+void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
+	std::string date, std::string sample, double shift) {
+	if (!m_writable) {
+		return;
+	}
+
+	if (date.compare("now") == 0) {
+		date = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
+			.toString(Qt::ISODate).toStdString();
+	}
+
+	// write data
+	hid_t dset_id = setDataset(parent, data, name, rank, dims);
+
+	// write date
+	setAttribute("date", date.c_str(), dset_id);
+
+	// write sample name
+	if (sample != "") {
+		setAttribute("sample", sample.c_str(), dset_id);
+	}
+
+	// write sample name
+	if (shift != NULL) {
+		setAttribute("shift", shift, dset_id);
+	}
+
+	H5Dclose(dset_id);
+}
+
+template <typename T>
+void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date) {
+	auto name = calculateIndex(indX, indY, indZ);
+
+	setData(data, name, m_payloadData, rank, dims, date);
+}
 
 #endif // H5BM_H

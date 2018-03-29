@@ -272,64 +272,6 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 	return positions;
 }
 
-void H5BM::setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date, std::string sample, double shift) {
-	if (!m_writable) {
-		return;
-	}
-
-	if (date.compare("now") == 0) {
-		date = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
-			.toString(Qt::ISODate).toStdString();
-	}
-
-	// write data
-	hid_t dset_id = setDataset(parent, data, name, rank, dims);
-
-	// write date
-	setAttribute("date", date.c_str(), dset_id);
-
-	// write sample name
-	if (sample != "") {
-		setAttribute("sample", sample.c_str(), dset_id);
-	}
-
-	// write sample name
-	if (shift != NULL) {
-		setAttribute("shift", shift, dset_id);
-	}
-
-	H5Dclose(dset_id);
-}
-
-void H5BM::setData(std::vector<unsigned short> data, std::string name, hid_t parent, const int rank, const hsize_t *dims, std::string date, std::string sample, double shift) {
-	if (!m_writable) {
-		return;
-	}
-
-	if (date.compare("now") == 0) {
-		date = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
-			.toString(Qt::ISODate).toStdString();
-	}
-
-	// write data
-	hid_t dset_id = setDataset(parent, data, name, rank, dims);
-
-	// write date
-	setAttribute("date", date.c_str(), dset_id);
-
-	// write sample name
-	if (sample != "") {
-		setAttribute("sample", sample.c_str(), dset_id);
-	}
-
-	// write sample name
-	if (shift != NULL) {
-		setAttribute("shift", shift, dset_id);
-	}
-
-	H5Dclose(dset_id);
-}
-
 std::vector<double> H5BM::getData(std::string name, hid_t parent) {
 	std::vector<double> data;
 	try {
@@ -352,18 +294,6 @@ std::string H5BM::getDate(std::string name, hid_t parent) {
 		//
 	}
 	return date;
-}
-
-void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
-	auto name = calculateIndex(indX, indY, indZ);
-
-	setData(data, name, m_payloadData, rank, dims, date);
-}
-
-void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<unsigned short> data, const int rank, const hsize_t *dims, std::string date) {
-	auto name = calculateIndex(indX, indY, indZ);
-
-	setData(data, name, m_payloadData, rank, dims, date);
 }
 
 std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {
