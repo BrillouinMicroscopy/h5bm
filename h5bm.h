@@ -44,9 +44,12 @@ private:
 	T getAttribute(std::string attrName);
 
 	hid_t setDataset(hid_t parent, std::vector<double> data, std::string name, const int rank, const hsize_t *dims);
+	hid_t setDataset(hid_t parent, std::vector<unsigned short> data, std::string name, const int rank, const hsize_t *dims);
 	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
 
 	void setData(std::vector<double> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
+		std::string date, std::string sample = "", double shift = NULL);
+	void setData(std::vector<unsigned short> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
 		std::string date, std::string sample = "", double shift = NULL);
 	std::vector<double> getData(std::string name, hid_t parent);
 	std::string getDate(std::string name, hid_t parent);
@@ -83,6 +86,7 @@ public:
 
 	// payload data
 	void setPayloadData(int indX, int indY, int indZ, const std::vector<double> data, const int rank, const hsize_t *dims, std::string date = "now");
+	void setPayloadData(int indX, int indY, int indZ, const std::vector<unsigned short> data, const int rank, const hsize_t *dims, std::string date = "now");
 	std::vector<double> getPayloadData(int indX, int indY, int indZ);
 	std::string getPayloadDate(int indX, int indY, int indZ);
 
