@@ -350,7 +350,7 @@ classdef h5bm < handle
             if strcmp(type, 'data')
                 try
                     dset_id = H5D.open(obj.payloadDataHandle, num2str(index));
-                    data = H5D.read(dset_id);
+                    data = double(H5D.read(dset_id));
                 catch
                     error('The dataset ''%s'' cannot be found.', num2str(index));
                 end
@@ -428,7 +428,7 @@ classdef h5bm < handle
             if strcmp(type, 'data')
                 try
                     dset_id = H5D.open(obj.backgroundDataHandle, num2str(index));
-                    data = H5D.read(dset_id);
+                    data = double(H5D.read(dset_id));
                 catch
                     error('The dataset ''%s'' cannot be found.', num2str(index));
                 end
@@ -538,7 +538,7 @@ classdef h5bm < handle
             if strcmp(type, 'data')
                 try
                     dset_id = H5D.open(obj.calibrationDataHandle, num2str(index));
-                    data = H5D.read(dset_id);
+                    data = double(H5D.read(dset_id));
                 catch
                     error('The dataset ''%s'' cannot be found.', num2str(index));
                 end
