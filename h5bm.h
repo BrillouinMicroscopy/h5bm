@@ -10,7 +10,7 @@ class H5BM : public QObject {
 	Q_OBJECT
 
 private:
-	bool m_writable = FALSE;
+	bool m_writable = false;
 
 	const std::string m_versionstring = "H5BM-v0.0.3";
 	hid_t m_file;		// handle to the opened file
@@ -45,7 +45,7 @@ private:
 	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long, H5T_NATIVE_ULONG)
 	HDF5_WRAPPER_SPECIALIZE_TYPE(long, H5T_NATIVE_LONG)
 
-	void getGroupHandles(bool create = FALSE);
+	void getGroupHandles(bool create = false);
 
 	// set/get attribute
 

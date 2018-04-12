@@ -7,13 +7,13 @@ using namespace std::experimental::filesystem::v1;
 H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 	: QObject(parent) {
 	if (flags == H5F_ACC_RDONLY) {
-		m_writable = FALSE;
+		m_writable = false;
 		if (exists(filename)) {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
-			getGroupHandles(FALSE);
+			getGroupHandles(false);
 		}
 	} else if (flags == H5F_ACC_RDWR) {
-		m_writable = TRUE;
+		m_writable = true;
 		if (!exists(filename)) {
 			// create the file
 			m_file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
@@ -22,7 +22,7 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags)
 		} else {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
-		getGroupHandles(TRUE);
+		getGroupHandles(true);
 	}
 }
 
@@ -138,7 +138,7 @@ std::string H5BM::getAttribute(std::string attrName, hid_t parent) {
 		H5Aread(attr_id, attr_type, buf);
 		string.assign(buf, attr_size);
 		delete[] buf;
-		buf = 0;
+		buf = nullptr;
 		H5Aclose(attr_id);
 	} catch (int e) {
 		// attribute was not found
