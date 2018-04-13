@@ -267,21 +267,12 @@ std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
 	return std::to_string(index);
 }
 
-void H5BM::setBackgroundData(const std::vector<double> data, const int rank, const hsize_t *dims, std::string date) {
-	// legacy: this should actually be stored under "backgroundData"
-	setData(data, "1", m_background, rank, dims, date);
-}
-
 std::vector<double> H5BM::getBackgroundData() {
 	return getData("1", m_background);
 }
 
 std::string H5BM::getBackgroundDate() {
 	return getDate("1", m_background);
-}
-
-void H5BM::setCalibrationData(int index, const std::vector<double> data, const int rank, const hsize_t * dims, std::string sample, double shift, std::string date) {
-	setData(data, std::to_string(index), m_calibrationData, rank, dims, date, sample, shift);
 }
 
 std::vector<double> H5BM::getCalibrationData(int index) {

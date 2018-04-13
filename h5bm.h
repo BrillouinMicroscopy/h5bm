@@ -112,12 +112,14 @@ public:
 	std::string getPayloadDate(int indX, int indY, int indZ);
 
 	// background data
-	void setBackgroundData(const std::vector<double> data, const int rank, const hsize_t *dims, std::string date = "now");
+	template <typename T>
+	void setBackgroundData(const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now");
 	std::vector<double> getBackgroundData();
 	std::string getBackgroundDate();
 
 	// calibration data
-	void setCalibrationData(int index, const std::vector<double> data, const int rank, const hsize_t *dims, std::string sample, double shift, std::string date = "now");
+	template <typename T>
+	void setCalibrationData(int index, const std::vector<T> data, const int rank, const hsize_t *dims, std::string sample, double shift, std::string date = "now");
 	std::vector<double> getCalibrationData(int index);
 	std::string getCalibrationDate(int index);
 	std::string getCalibrationSample(int index);
@@ -186,6 +188,17 @@ void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<T> dat
 	auto name = calculateIndex(indX, indY, indZ);
 
 	setData(data, name, m_payloadData, rank, dims, date);
+}
+
+template <typename T>
+void H5BM::setCalibrationData(int index, const std::vector<T> data, const int rank, const hsize_t * dims, std::string sample, double shift, std::string date) {
+	setData(data, std::to_string(index), m_calibrationData, rank, dims, date, sample, shift);
+}
+
+template <typename T>
+void H5BM::setBackgroundData(const std::vector<T> data, const int rank, const hsize_t *dims, std::string date) {
+	// legacy: this should actually be stored under "backgroundData"
+	setData(data, "1", m_background, rank, dims, date);
 }
 
 #endif // H5BM_H
