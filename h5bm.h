@@ -134,13 +134,8 @@ hid_t H5BM::setDataset(hid_t parent, std::vector<T> data, std::string name, cons
 	hid_t space_id = H5Screate_simple(rank, dims, dims);
 
 	hid_t dset_id;
-	try {
-		dset_id = H5Dopen2(parent, name.c_str(), H5P_DEFAULT);
-		if (dset_id < 0) {
-			throw(-1);
-		}
-	}
-	catch (int e) {
+	dset_id = H5Dopen2(parent, name.c_str(), H5P_DEFAULT);
+	if (dset_id < 0) {
 		dset_id = H5Dcreate2(parent, name.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 

@@ -74,13 +74,8 @@ void H5BM::setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t 
 	hid_t space_id = H5Screate_simple(1, dims, maxdims);
 	hid_t acpl_id = H5Pcreate(H5P_ATTRIBUTE_CREATE);
 	hid_t attr_id;
-	try {
-		attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
-		if (attr_id < 0) {
-			throw(-1);
-		}
-	}
-	catch (int e) {
+	attr_id = H5Aopen(parent, attrName.c_str(), H5P_DEFAULT);
+	if (attr_id < 0) {
 		attr_id = H5Acreate2(parent, attrName.c_str(), type_id, space_id, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	H5Awrite(attr_id, type_id, attrValue);
