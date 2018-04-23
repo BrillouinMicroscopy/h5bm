@@ -156,7 +156,7 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 
 	if (date.compare("now") == 0) {
 		date = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
-			.toString(Qt::ISODate).toStdString();
+			.toString(Qt::ISODateWithMs).toStdString();
 	}
 
 	// write data
