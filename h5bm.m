@@ -714,7 +714,7 @@ classdef h5bm < handle
                 datum = datetime(datestring);
             end
             datum.TimeZone = 'local';
-            datum.Format = 'uuuu-MM-dd''T''HH:mm:ssXXX';
+            datum.Format = format;
             datum = char(datum);
         end
         
@@ -740,6 +740,8 @@ classdef h5bm < handle
         function format = dateFormat (datestring)
             if regexp(datestring, '\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)')
                 format = 'uuuu-MM-dd''T''HH:mm:ssXXX';
+            elseif regexp(datestring, '\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d{3}([+-][0-2]\d:[0-5]\d|Z)')
+                format = 'uuuu-MM-dd''T''HH:mm:ss.SSSXXX';
             else
                 format = '';
             end
