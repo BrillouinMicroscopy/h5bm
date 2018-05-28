@@ -4,7 +4,7 @@
 
 using namespace std::experimental::filesystem::v1;
 
-H5BM::H5BM(QObject *parent, const std::string filename, int flags)
+H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 	: QObject(parent) {
 	if (flags == H5F_ACC_RDONLY) {
 		m_writable = false;

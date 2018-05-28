@@ -82,7 +82,7 @@ public:
 		QObject *parent = 0,
 		const std::string filename = "Brillouin.h5",
 		int flags = H5F_ACC_RDONLY
-	);
+	) noexcept;
 	~H5BM();
 
 	// date
