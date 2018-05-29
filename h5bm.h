@@ -13,16 +13,16 @@ private:
 	bool m_writable = false;
 
 	const std::string m_versionstring = "H5BM-v0.0.3";
-	hid_t m_file;		// handle to the opened file
+	hid_t m_file = -1;		// handle to the opened file, default initialize to indicate no open file
 
-	hid_t m_payload;
-	hid_t m_payloadData;
+	hid_t m_payload = -1;
+	hid_t m_payloadData = -1;
 
-	hid_t m_calibration;
-	hid_t m_calibrationData;
+	hid_t m_calibration = -1;
+	hid_t m_calibrationData = -1;
 
-	hid_t m_background;
-	hid_t m_backgroundData;
+	hid_t m_background = -1;
+	hid_t m_backgroundData = -1;
 
 	template<class T>
 	inline hid_t get_memtype();
