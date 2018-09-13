@@ -6,12 +6,12 @@ using namespace std::experimental::filesystem::v1;
 
 H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 	: QObject(parent) {
-	if (flags == H5F_ACC_RDONLY) {
+	if (flags & H5F_ACC_RDONLY) {
 		m_writable = false;
 		if (exists(filename)) {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
-	} else if (flags == H5F_ACC_RDWR) {
+	} else if (flags & (H5F_ACC_RDWR | H5F_ACC_TRUNC)) {
 		m_writable = true;
 		if (!exists(filename)) {
 			// create the file
@@ -22,8 +22,10 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 			std::string now = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
 				.toString(Qt::ISODateWithMs).toStdString();
 			setAttribute("date", now);
-		} else {
+		} else if (flags & H5F_ACC_RDWR) {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
+		} else {
+			m_file = H5Fcreate(&filename[0], flags, H5P_DEFAULT, H5P_DEFAULT);
 		}
 		getRootHandle(m_Brillouin, true);
 		getRootHandle(m_ODT, true);
@@ -58,18 +60,23 @@ void H5BM::newRepetition(ACQUISITION_MODE mode) {
 			return;
 	}
 	getRepetitionHandle(*handle, true);
-	handle->repetitionCount++;
 }
 
 void H5BM::getRepetitionHandle(ModeHandles &handle, bool create) {
-	std::string s = std::to_string(handle.repetitionCount);
-	const char *number = s.c_str();
 	if (handle.currentRepetitionHandle) {
 		H5Gclose(handle.currentRepetitionHandle);
 	}
-	handle.currentRepetitionHandle = H5Gopen2(handle.rootHandle, number, H5P_DEFAULT);
+	std::string repetitionCountString = std::to_string(handle.repetitionCount);
+	handle.currentRepetitionHandle = H5Gopen2(handle.rootHandle, repetitionCountString.c_str(), H5P_DEFAULT);
+	// Check for existing repetitions and do not override them
+	while (handle.currentRepetitionHandle > -1) {
+		H5Gclose(handle.currentRepetitionHandle);
+		repetitionCountString = std::to_string(++handle.repetitionCount);
+		handle.currentRepetitionHandle = H5Gopen2(handle.rootHandle, repetitionCountString.c_str(), H5P_DEFAULT);
+	}
+
 	if (handle.currentRepetitionHandle < 0 && create) {
-		handle.currentRepetitionHandle = H5Gcreate2(handle.rootHandle, number, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+		handle.currentRepetitionHandle = H5Gcreate2(handle.rootHandle, repetitionCountString.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	// set the current datetime
 	std::string date = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
