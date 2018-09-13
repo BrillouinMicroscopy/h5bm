@@ -18,6 +18,10 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 			m_file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
 			// set the version attribute
 			setAttribute("version", m_versionstring);
+
+			std::string now = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
+				.toString(Qt::ISODateWithMs).toStdString();
+			setAttribute("date", now);
 		} else {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
