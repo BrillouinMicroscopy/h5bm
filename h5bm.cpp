@@ -10,7 +10,6 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 		m_writable = false;
 		if (exists(filename)) {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
-			getGroupHandles(false);
 		}
 	} else if (flags == H5F_ACC_RDWR) {
 		m_writable = true;
@@ -22,49 +21,58 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 		} else {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
-		getGroupHandles(true);
+		getRootHandle(m_Brillouin, true);
+		getRootHandle(m_ODT, true);
+		getRootHandle(m_Fluorescence, true);
 	}
 }
 
 H5BM::~H5BM() {
-	H5Gclose(m_payload);
-	H5Gclose(m_payloadData);
-	H5Gclose(m_background);
-	H5Gclose(m_backgroundData);
-	H5Gclose(m_calibration);
-	H5Gclose(m_calibrationData);
 	H5Fclose(m_file);
 }
 
-void H5BM::getGroupHandles(bool create) {
-	// payload handles
-	m_payload = H5Gopen2(m_file, "payload", H5P_DEFAULT);
-	if (m_payload < 0 && create) {
-		m_payload = H5Gcreate2(m_file, "payload", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+void H5BM::getRootHandle(ModeHandles &handle, bool create) {
+	handle.rootHandle = H5Gopen2(m_file, handle.modename.c_str(), H5P_DEFAULT);
+	if (handle.rootHandle < 0) {
+		handle.rootHandle = H5Gcreate2(m_file, handle.modename.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
-	m_payloadData = H5Gopen2(m_payload, "data", H5P_DEFAULT);
-	if (m_payloadData < 0 && create) {
-		m_payloadData = H5Gcreate2(m_payload, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+}
+
+void H5BM::newRepetition(ACQUISITION_MODE mode) {
+	ModeHandles *handle;
+	switch (mode) {
+		case ACQUISITION_MODE::BRILLOUIN:
+			handle = &m_Brillouin;
+			break;
+		case ACQUISITION_MODE::ODT:
+			handle = &m_ODT;
+			break;
+		case ACQUISITION_MODE::FLUORESCENCE:
+			handle = &m_Fluorescence;
+			break;
+		default:
+			return;
 	}
-	// background handles
-	m_background = H5Gopen2(m_file, "background", H5P_DEFAULT);
-	if (m_background < 0 && create) {
-		m_background = H5Gcreate2(m_file, "background", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	getRepetitionHandle(*handle, true);
+	handle->repetitionCount++;
+}
+
+void H5BM::getRepetitionHandle(ModeHandles &handle, bool create) {
+	std::string s = std::to_string(handle.repetitionCount);
+	const char *number = s.c_str();
+	if (handle.currentRepetitionHandle) {
+		H5Gclose(handle.currentRepetitionHandle);
 	}
-	m_backgroundData = H5Gopen2(m_background, "data", H5P_DEFAULT);
-	if (m_backgroundData < 0 && create) {
-		m_backgroundData = H5Gcreate2(m_background, "data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	handle.currentRepetitionHandle = H5Gopen2(handle.rootHandle, number, H5P_DEFAULT);
+	if (handle.currentRepetitionHandle < 0 && create) {
+		handle.currentRepetitionHandle = H5Gcreate2(handle.rootHandle, number, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
-	// calibration handles
-	m_calibration = H5Gopen2(m_file, "calibration", H5P_DEFAULT);
-	if (m_calibration < 0 && create) {
-		m_calibration = H5Gcreate2(m_file, "calibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-	}
-	// legacy: this should actually be named "data" only
-	m_calibrationData = H5Gopen2(m_calibration, "calibrationData", H5P_DEFAULT);
-	if (m_calibrationData < 0 && create) {
-		m_calibrationData = H5Gcreate2(m_calibration, "calibrationData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-	}
+	// set the current datetime
+	std::string date = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
+		.toString(Qt::ISODateWithMs).toStdString();
+	setAttribute("date", date, handle.currentRepetitionHandle);
+	// create group handles
+	handle.groups = std::make_unique <RepetitionHandles>(handle.mode, handle.currentRepetitionHandle, true);
 }
 
 template<typename T>
@@ -173,12 +181,12 @@ std::string H5BM::getComment() {
 
 void H5BM::setResolution(std::string direction, int resolution) {
 	direction = "resolution-" + direction;
-	setAttribute(direction, resolution, m_payload);
+	setAttribute(direction, resolution, m_Brillouin.groups->payload);
 }
 
 int H5BM::getResolution(std::string direction) {
 	direction = "resolution-" + direction;
-	return getAttribute<int>(direction, m_payload);
+	return getAttribute<int>(direction, m_Brillouin.groups->payload);
 }
 
 void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name) {
@@ -203,7 +211,7 @@ void H5BM::setPositions(std::string direction, const std::vector<double> positio
 	}
 	direction = "positions-" + direction;
 
-	hid_t dset_id = setDataset(m_payload, positions, direction, rank, dims);
+	hid_t dset_id = setDataset(m_Brillouin.groups->payload, positions, direction, rank, dims);
 	H5Dclose(dset_id);
 }
 
@@ -212,7 +220,7 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 
 	std::vector<double> positions;
 	try {
-		getDataset(&positions, m_payload, direction);
+		getDataset(&positions, m_Brillouin.groups->payload, direction);
 	} catch (int e) {
 		//
 	}
@@ -245,12 +253,12 @@ std::string H5BM::getDate(std::string name, hid_t parent) {
 
 std::vector<double> H5BM::getPayloadData(int indX, int indY, int indZ) {
 	auto name = calculateIndex(indX, indY, indZ);
-	return getData(name, m_payloadData);
+	return getData(name, m_Brillouin.groups->payload);
 }
 
 std::string H5BM::getPayloadDate(int indX, int indY, int indZ) {
 	auto name = calculateIndex(indX, indY, indZ);
-	return getDate(name, m_payloadData);
+	return getDate(name, m_Brillouin.groups->payload);
 }
 
 std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
@@ -263,11 +271,11 @@ std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
 }
 
 std::vector<double> H5BM::getBackgroundData() {
-	return getData("1", m_background);
+	return getData("1", m_Brillouin.groups->payload);
 }
 
 std::string H5BM::getBackgroundDate() {
-	return getDate("1", m_background);
+	return getDate("1", m_Brillouin.groups->payload);
 }
 
 std::vector<double> H5BM::getCalibrationData(int index) {
