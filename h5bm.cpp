@@ -7,12 +7,12 @@ using namespace std::experimental::filesystem::v1;
 H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 	: QObject(parent) {
 	if (flags & H5F_ACC_RDONLY) {
-		m_writable = false;
+		m_fileWritable = false;
 		if (exists(filename)) {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		}
 	} else if (flags & (H5F_ACC_RDWR | H5F_ACC_TRUNC)) {
-		m_writable = true;
+		m_fileWritable = true;
 		if (!exists(filename)) {
 			// create the file
 			m_file = H5Fcreate(&filename[0], H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
@@ -25,6 +25,10 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
 		} else {
 			m_file = H5Fcreate(&filename[0], flags, H5P_DEFAULT, H5P_DEFAULT);
+		}
+		if (m_file < 0) {
+			m_fileWritable = false;
+			m_fileValid = false;
 		}
 		getRootHandle(m_Brillouin, true);
 		getRootHandle(m_ODT, true);
@@ -215,7 +219,7 @@ void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name)
 }
 
 void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
-	if (!m_writable) {
+	if (!m_fileWritable) {
 		return;
 	}
 	direction = "positions-" + direction;

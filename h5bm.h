@@ -3,16 +3,19 @@
 
 #include <string>
 #include <vector>
+#include <bitset>
 
 #include "hdf5.h"
+#include "TypesafeBitmask.h"
 
 enum class ACQUISITION_MODE {
-	NONE,
-	BRILLOUIN,
-	ODT,
-	FLUORESCENCE,
+	NONE = 0x0,
+	BRILLOUIN = 0x2,
+	ODT = 0x4,
+	FLUORESCENCE = 0x8,
 	MODECOUNT
 };
+ENABLE_BITMASK_OPERATORS(ACQUISITION_MODE)
 
 struct RepetitionHandles {
 	hid_t payload{ -1 };
@@ -49,7 +52,7 @@ private:
 		/*
 		* Only Brillouin mode writes calibration and background data
 		*/
-		if (mode == ACQUISITION_MODE::BRILLOUIN) {
+		if ((bool)(mode & ACQUISITION_MODE::BRILLOUIN)) {
 			// background handles
 			background = H5Gopen2(handle, "background", H5P_DEFAULT);
 			if (background < 0 && create) {
@@ -95,7 +98,8 @@ class H5BM : public QObject {
 	Q_OBJECT
 
 private:
-	bool m_writable = false;
+	bool m_fileWritable = false;
+	bool m_fileValid = false;
 
 	const std::string m_versionstring = "H5BM-v0.0.4";
 	hid_t m_file = -1;		// handle to the opened file, default initialize to indicate no open file
@@ -222,7 +226,6 @@ public:
 	std::string getCalibrationDate(int index);
 	std::string getCalibrationSample(int index);
 	double getCalibrationShift(int index);
-
 };
 
 template <typename T>
@@ -248,7 +251,7 @@ hid_t H5BM::setDataset(hid_t parent, std::vector<T> data, std::string name, cons
 template <typename T>
 void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
 	std::string date, std::string sample, double shift) {
-	if (!m_writable) {
+	if (!m_fileWritable) {
 		return;
 	}
 
