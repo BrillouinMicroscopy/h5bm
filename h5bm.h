@@ -261,6 +261,11 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 	// write date
 	setAttribute("date", date.c_str(), dset_id);
 
+	// write image attributes
+	setAttribute("CLASS", "IMAGE", dset_id);
+	setAttribute("IMAGE_VERSION", "1.2", dset_id);
+	setAttribute("IMAGE_SUBCLASS", "IMAGE_GRAYSCALE", dset_id);
+
 	// write sample name
 	if (sample != "") {
 		setAttribute("sample", sample.c_str(), dset_id);
