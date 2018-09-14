@@ -19,8 +19,7 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 			// set the version attribute
 			setAttribute("version", m_versionstring);
 
-			std::string now = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
-				.toString(Qt::ISODateWithMs).toStdString();
+			std::string now = getNow();
 			setAttribute("date", now);
 		} else if (flags & H5F_ACC_RDWR) {
 			m_file = H5Fopen(&filename[0], flags, H5P_DEFAULT);
@@ -79,8 +78,7 @@ void H5BM::getRepetitionHandle(ModeHandles &handle, bool create) {
 		handle.currentRepetitionHandle = H5Gcreate2(handle.rootHandle, repetitionCountString.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	}
 	// set the current datetime
-	std::string date = QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
-		.toString(Qt::ISODateWithMs).toStdString();
+	std::string date = getNow();
 	setAttribute("date", date, handle.currentRepetitionHandle);
 	// create group handles
 	handle.groups = std::make_unique <RepetitionHandles>(handle.mode, handle.currentRepetitionHandle, true);
@@ -279,6 +277,11 @@ std::string H5BM::calculateIndex(int indX, int indY, int indZ) {
 
 	int index = (indZ*(resolutionX*resolutionY) + indY * resolutionX + indX);
 	return std::to_string(index);
+}
+
+std::string H5BM::getNow() {
+	return QDateTime::currentDateTime().toOffsetFromUtc(QDateTime::currentDateTime().offsetFromUtc())
+		.toString(Qt::ISODateWithMs).toStdString();
 }
 
 std::vector<double> H5BM::getBackgroundData() {
