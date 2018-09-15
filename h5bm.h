@@ -8,6 +8,46 @@
 #include "hdf5.h"
 #include "TypesafeBitmask.h"
 
+struct IMAGE {
+public:
+	IMAGE(int indX, int indY, int indZ, int rank, hsize_t *dims, std::string date, std::vector<unsigned short> data) :
+		indX(indX), indY(indY), indZ(indZ), rank(rank), dims(dims), date(date), data(data) {};
+
+	const int indX;
+	const int indY;
+	const int indZ;
+	const int rank;
+	const hsize_t *dims;
+	const std::string date;
+	const std::vector<unsigned short> data;
+};
+
+struct CALIBRATION {
+public:
+	CALIBRATION(int index, std::vector<unsigned short> data, int rank, hsize_t *dims, std::string sample, double shift, std::string date) :
+		index(index), data(data), rank(rank), dims(dims), sample(sample), shift(shift), date(date) {};
+
+	const int index;
+	const std::vector<unsigned short> data;
+	const int rank;
+	const hsize_t *dims;
+	const std::string sample;
+	const double shift;
+	const std::string date;
+};
+
+struct ODTIMAGE {
+public:
+	ODTIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::vector<unsigned char> data) :
+		ind(ind), rank(rank), dims(dims), date(date), data(data) {};
+
+	const int ind;
+	const int rank;
+	const hsize_t *dims;
+	const std::string date;
+	const std::vector<unsigned char> data;
+};
+
 enum class ACQUISITION_MODE {
 	NONE = 0x0,
 	BRILLOUIN = 0x2,
@@ -210,6 +250,8 @@ public:
 	// payload data
 	template <typename T>
 	void setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now");
+	void setPayloadData(IMAGE *);
+	void setPayloadData(ODTIMAGE *);
 	std::vector<double> getPayloadData(int indX, int indY, int indZ);
 	std::string getPayloadDate(int indX, int indY, int indZ);
 

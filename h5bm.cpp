@@ -311,3 +311,15 @@ std::string H5BM::getCalibrationSample(int index) {
 double H5BM::getCalibrationShift(int index) {
 	return 0.0;
 }
+
+void H5BM::setPayloadData(IMAGE *image) {
+	auto name = calculateIndex(image->indX, image->indY, image->indZ);
+
+	setData(image->data, name, m_Brillouin.groups->payloadData, image->rank, image->dims, image->date);
+};
+
+void H5BM::setPayloadData(ODTIMAGE *image) {
+	auto name = std::to_string(image->ind);
+
+	setData(image->data, name, m_ODT.groups->payloadData, image->rank, image->dims, image->date);
+};
