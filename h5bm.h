@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <bitset>
+#include <QtWidgets>
 
 #include "hdf5.h"
 #include "TypesafeBitmask.h"
