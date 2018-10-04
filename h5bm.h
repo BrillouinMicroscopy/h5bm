@@ -49,6 +49,19 @@ public:
 	const std::vector<unsigned char> data;
 };
 
+struct FLUOIMAGE {
+public:
+	FLUOIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::string channel, std::vector<unsigned char> data) :
+		ind(ind), rank(rank), dims(dims), date(date), channel(channel), data(data) {};
+
+	const int ind;
+	const int rank;
+	const hsize_t *dims;
+	const std::string date;
+	const std::string channel;
+	const std::vector<unsigned char> data;
+};
+
 enum class ACQUISITION_MODE {
 	NONE = 0x0,
 	BRILLOUIN = 0x2,
@@ -209,7 +222,7 @@ private:
 
 	template <typename T>
 	void setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
-		std::string date, std::string sample = "", double shift = NULL);
+		std::string date, std::string sample = "", double shift = NULL, std::string channel = "");
 
 	std::vector<double> getData(std::string name, hid_t parent);
 	std::string getDate(std::string name, hid_t parent);
@@ -253,6 +266,7 @@ public:
 	void setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now");
 	void setPayloadData(IMAGE *);
 	void setPayloadData(ODTIMAGE *);
+	void setPayloadData(FLUOIMAGE *);
 	std::vector<double> getPayloadData(int indX, int indY, int indZ);
 	std::string getPayloadDate(int indX, int indY, int indZ);
 
@@ -293,7 +307,7 @@ hid_t H5BM::setDataset(hid_t parent, std::vector<T> data, std::string name, cons
 
 template <typename T>
 void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
-	std::string date, std::string sample, double shift) {
+	std::string date, std::string sample, double shift, std::string channel) {
 	if (!m_fileWritable) {
 		return;
 	}
@@ -321,6 +335,11 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 	// write sample name
 	if (shift != NULL) {
 		setAttribute("shift", shift, dset_id);
+	}
+
+	// write channel name
+	if (channel != "") {
+		setAttribute("channel", channel, dset_id);
 	}
 
 	H5Dclose(dset_id);

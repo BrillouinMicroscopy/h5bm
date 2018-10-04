@@ -323,3 +323,9 @@ void H5BM::setPayloadData(ODTIMAGE *image) {
 
 	setData(image->data, name, m_ODT.groups->payloadData, image->rank, image->dims, image->date);
 };
+
+void H5BM::setPayloadData(FLUOIMAGE *image) {
+	auto name = std::to_string(image->ind);
+
+	setData(image->data, name, m_Fluorescence.groups->payloadData, image->rank, image->dims, image->date, image->channel);
+};
