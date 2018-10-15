@@ -343,6 +343,9 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 	}
 
 	H5Dclose(dset_id);
+
+	// write last-modified date to file
+	setAttribute("last-modified", getNow());
 }
 
 template <typename T>
