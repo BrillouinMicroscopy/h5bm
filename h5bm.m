@@ -48,11 +48,6 @@ classdef h5bm < handle
             end
         end
         
-        %% Set the version
-        %  The version attribute is set automatically on file creation.
-        function set.version (~, ~)
-        end
-        
         %% Get the version
         function version = get.version (obj)
             try
