@@ -171,12 +171,8 @@ classdef h5bm < handle
                 try
                     dset_id = H5D.open(obj.payloadDataHandle(mode, repetition), num2str(imageNr));
                     data = double(H5D.read(dset_id));
-                    % Images need to be rotated for correct orientation,
-                    % but the Brillouin evaluation software expects it
-                    % differently at the moment.
-                    if (~strcmp(mode, 'Brillouin'))
-                        data = rot90(data);
-                    end
+                    % Images need to be rotated for correct orientation
+                    data = rot90(data);
                 catch
                     error('The dataset ''%s'' cannot be found.', num2str(imageNr));
                 end
@@ -201,6 +197,8 @@ classdef h5bm < handle
                 try
                     dset_id = H5D.open(obj.backgroundDataHandle(mode, repetition), num2str(index));
                     data = double(H5D.read(dset_id));
+                    % Images need to be rotated for correct orientation
+                    data = rot90(data);
                 catch
                     error('The dataset ''%s'' cannot be found.', num2str(index));
                 end
@@ -224,6 +222,8 @@ classdef h5bm < handle
                 try
                     dset_id = H5D.open(obj.calibrationDataHandle(mode, repetition), num2str(index));
                     data = double(H5D.read(dset_id));
+                    % Images need to be rotated for correct orientation
+                    data = rot90(data);
                 catch
                     error('The dataset ''%s'' cannot be found.', num2str(index));
                 end
