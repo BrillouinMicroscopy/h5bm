@@ -267,19 +267,28 @@ classdef h5bm < handle
             elseif (mode == 'Brillouin')
                 group_id = obj.fileHandle;
             else
-                disp('This file version does only support to store Brillouin data.')
-                return;
+                ME = MException('H5BM:modeNotSupported', ...
+                    'This file version does not support to store %s data.', mode);
+                throw(ME);
             end
         end
         
         %% Get handle for repetition group
         function group_id = repetitionHandle (obj, mode, repetition)
             if (obj.fileVersionMatches(struct('major', 0, 'minor', 0, 'patch', 4)))
-                group_id = H5G.open(obj.modeHandle(mode), num2str(repetition));
+                try
+                    group_id = H5G.open(obj.modeHandle(mode), num2str(repetition));
+                catch
+                    ME = MException('H5BM:repetitionNotFound', ...
+                        'The requested repetition %s was not found.', num2str(repetition));
+                    throw(ME);
+                end
             elseif (repetition == 0)
                 group_id = obj.fileHandle;
             else
-                disp('This file version does not support to store more than one repetition.')
+                ME = MException('H5BM:noRepetitions', ...
+                    'This file version does not support to store more than one repetition.');
+                throw(ME);
             end
         end
         
@@ -288,6 +297,9 @@ classdef h5bm < handle
             try
                 group_id = H5G.open(obj.repetitionHandle(mode, repetition), 'payload');
             catch
+                ME = MException('H5BM:couldNotOpenPayload', ...
+                    'Could not open the payload handle for mode %s, repetition %s.', mode, num2str(repetition));
+                throw(ME);
             end
         end
         
