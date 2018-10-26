@@ -12,54 +12,64 @@ date = file.date;
 % get the comment
 comment = file.comment;
 
+%% Brillouin
+
+% get the repetition date
+repDate = file.getDate('Brillouin', 0);
+
 % get the resolution in x-direction
-resolution.X = file.resolutionX;
+resolution.X = file.getResolutionX('Brillouin', 0);
 
 % get the resolution in y-direction
-resolution.Y = file.resolutionY;
+resolution.Y = file.getResolutionY('Brillouin', 0);
 
 % get the resolution in z-direction
-resolution.Z = file.resolutionZ;
+resolution.Z = file.getResolutionZ('Brillouin', 0);
 
 % get the positions in x-direction
-positions.X = file.positionsX;
+positions.X = file.getPositionsX('Brillouin', 0);
 
 % get the positions in x-direction
-positions.Y = file.positionsY;
+positions.Y = file.getPositionsY('Brillouin', 0);
 
 % get the positions in x-direction
-positions.Z = file.positionsZ;
+positions.Z = file.getPositionsZ('Brillouin', 0);
 
 % get the payload data at index (3,3,1)
 payload = struct();
-payload.data = file.readPayloadData(3,3,1,'data');
+payload.data = file.readPayloadData('Brillouin', 0, 'data', 3, 3, 1);
 % get the payload data date at index (3,3)
-payload.date = file.readPayloadData(3,3,1,'date');
+payload.date = file.readPayloadData('Brillouin', 0, 'date', 3, 3, 1);
 
 % get the background image data
 bg = struct();
-bg.data = file.readBackgroundData('data');
+bg.data = file.readBackgroundData('Brillouin', 0, 'data');
 % get the background image data date
-bg.date = file.readBackgroundData('date');
+bg.date = file.readBackgroundData('Brillouin', 0, 'date');
 
 % get the calibration image data
 cal = struct();
-cal(1).data = file.readCalibrationData(1,'data');
+cal(1).data = file.readCalibrationData('Brillouin', 0, 'data', 1);
 % get the calibration image data date
-cal(1).date = file.readCalibrationData(1,'date');
+cal(1).date = file.readCalibrationData('Brillouin', 0, 'date', 1);
 % get the calibration image data sample type
-cal(1).sample = file.readCalibrationData(1,'sample');
+cal(1).sample = file.readCalibrationData('Brillouin', 0, 'sample', 1);
 % get the calibration image data date
-cal(1).shift = file.readCalibrationData(1,'shift');
+cal(1).shift = file.readCalibrationData('Brillouin', 0,'shift', 1);
 
 % get the calibration image data
-cal(2).data = file.readCalibrationData(2,'data');
+cal(2).data = file.readCalibrationData('Brillouin', 0, 'data', 2);
 % get the calibration image data date
-cal(2).date = file.readCalibrationData(2,'date');
+cal(2).date = file.readCalibrationData('Brillouin', 0, 'date', 2);
 % get the calibration image data sample type
-cal(2).sample = file.readCalibrationData(2,'sample');
+cal(2).sample = file.readCalibrationData('Brillouin', 0, 'sample', 2);
 % get the calibration image data date
-cal(2).shift = file.readCalibrationData(2,'shift');
+cal(2).shift = file.readCalibrationData('Brillouin', 0, 'shift', 2);
+
+%% ODT
+
+ODTpayload = struct();
+ODTpayload.data = file.readPayloadData('ODT', 0, 'data', 1);
 
 % close the handle
 h5bmclose(file);
