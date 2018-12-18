@@ -54,7 +54,7 @@ classdef h5bm < handle
         %% Get the date of the repetition
         function date = getDate (obj, mode, repetition)
             try
-                attr_id = H5A.open(obj.payloadHandle(mode, repetition), 'date');
+                attr_id = H5A.open(obj.repetitionHandle(mode, repetition), 'date');
                 date = transpose(H5A.read(attr_id));
             catch e
                 error(['The attribute ''date'' does not seem to exist: ' e.message]);
