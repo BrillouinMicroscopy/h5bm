@@ -47,8 +47,7 @@ classdef h5bm < handle
                  attr_id = H5A.open(obj.fileHandle, 'date');
                  date = transpose(H5A.read(attr_id));
              catch e
-                 warning(['The attribute ''date'' does not seem to exist: ' e.message]);
-                 date = '';
+                 error(['The attribute ''date'' does not seem to exist: ' e.message]);
             end
         end
         
@@ -58,8 +57,7 @@ classdef h5bm < handle
                 attr_id = H5A.open(obj.payloadHandle(mode, repetition), 'date');
                 date = transpose(H5A.read(attr_id));
             catch e
-                warning(['The attribute ''date'' does not seem to exist: ' e.message]);
-                date = '';
+                error(['The attribute ''date'' does not seem to exist: ' e.message]);
             end
         end
         
@@ -69,8 +67,7 @@ classdef h5bm < handle
                 attr_id = H5A.open(obj.fileHandle, 'version');
                 version = transpose(H5A.read(attr_id));
             catch e
-                warning(['The attribute ''version'' does not seem to exist: ' e.message]);
-                version = '';
+                error(['The attribute ''version'' does not seem to exist: ' e.message]);
             end
         end
         
@@ -80,8 +77,7 @@ classdef h5bm < handle
                 attr_id = H5A.open(obj.fileHandle, 'comment');
                 comment = transpose(H5A.read(attr_id));
             catch e
-                warning(['The attribute ''comment'' does not seem to exist: ' e.message]);
-                comment = '';
+                error(['The attribute ''comment'' does not seem to exist: ' e.message]);
             end
         end
         
@@ -93,8 +89,7 @@ classdef h5bm < handle
                 attr_id = H5A.open(group_id, direction);
                 resolution = transpose(H5A.read(attr_id));
             catch e
-                warning(['The attribute ' direction ' does not seem to exist: ' e.message]);
-                resolution = '';
+                error(['The attribute ' direction ' does not seem to exist: ' e.message]);
             end
         end
         
