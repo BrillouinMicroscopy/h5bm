@@ -180,6 +180,15 @@ classdef h5bm < handle
                 catch
                     error('The attribute ''date'' of the dataset ''%s'' cannot be found.', num2str(imageNr));
                 end
+            elseif strcmp(type, 'channel')
+                try
+                    dset_id = H5D.open(obj.payloadDataHandle(mode, repetition), num2str(imageNr));
+                    attr_id = H5A.open(dset_id, 'channel');
+                    data = H5A.read(attr_id);
+                    data = transpose(data);
+                catch
+                    error('The attribute ''channel'' of the dataset ''%s'' cannot be found.', num2str(imageNr));
+                end
             else
                 error('The specified data type is not supported.');
             end
