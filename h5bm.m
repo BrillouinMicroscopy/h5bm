@@ -158,6 +158,7 @@ classdef h5bm < handle
                 if imageNr < 0
                     error('Subscript indices must either be real positive integers or logicals.');
                 end
+            elseif nargin == 4
             else
                 return;
             end
@@ -189,8 +190,22 @@ classdef h5bm < handle
                 catch
                     error('The attribute ''channel'' of the dataset ''%s'' cannot be found.', num2str(imageNr));
                 end
+            elseif strcmp(type, 'memberNames')
+                try
+                    [~, ~, data] = H5L.iterate(obj.payloadDataHandle(mode, repetition), ...
+                        'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addMemberName, {});
+                catch
+                    error('Could not determine the members of this group.');
+                end
             else
                 error('The specified data type is not supported.');
+            end
+            
+            %%
+            function [status, memberNames] = addMemberName(~, memberName, memberNames)
+                %% Add group to array of repetitions
+                memberNames{length(memberNames)+1} = memberName;
+                status = 0;
             end
         end
         
