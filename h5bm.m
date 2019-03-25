@@ -408,14 +408,14 @@ classdef h5bm < handle
         
         %% Check if file version fullfils requested version number
         function is = fileVersionMatches(obj, requestedVersion)
-           if (obj.major > requestedVersion.major) 
-               is = true;
-           elseif (obj.minor > requestedVersion.minor)
-               is = true;
-           elseif (obj.patch >= requestedVersion.patch)
-               is = true;
-           else
+           if (obj.major < requestedVersion.major) 
                is = false;
+           elseif (obj.minor < requestedVersion.minor)
+               is = false;
+           elseif (obj.patch < requestedVersion.patch)
+               is = false;
+           else
+               is = true;
            end
         end
         
