@@ -137,7 +137,13 @@ classdef h5bm < handle
         %% Get the repetition names for the specified mode
         
         function repetitions = getRepetitions (obj, mode)
-            [~, ~, repetitions] = H5L.iterate(obj.modeHandle(mode), 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addMemberName, {});
+            % Storing multiple repetitions is only supported since H5BM-v0.0.4
+            if (obj.fileVersionMatches(struct('major', 0, 'minor', 0, 'patch', 4)))
+                [~, ~, repetitions] = H5L.iterate(obj.modeHandle(mode), 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addMemberName, {});
+            else
+            % Otherwise we return '0'
+                repetitions = {'0'};
+            end
             
             %%
             function [status, memberNames] = addMemberName(~, memberName, memberNames)
