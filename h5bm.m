@@ -134,6 +134,19 @@ classdef h5bm < handle
             positions = getPositions (obj, mode, repetition, 'z');
         end
         
+        %% Get the repetition names for the specified mode
+        
+        function repetitions = getRepetitions (obj, mode)
+            [~, ~, repetitions] = H5L.iterate(obj.modeHandle(mode), 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addMemberName, {});
+            
+            %%
+            function [status, memberNames] = addMemberName(~, memberName, memberNames)
+                %% Add group to array of repetitions
+                memberNames{length(memberNames)+1} = memberName;
+                status = 0;
+            end
+        end
+        
         %% Get the payload data for the specified mode
         function data = readPayloadData (varargin)
             obj = varargin{1};
@@ -283,7 +296,7 @@ classdef h5bm < handle
         function group_id = modeHandle (obj, mode)
             if (obj.fileVersionMatches(struct('major', 0, 'minor', 0, 'patch', 4)))
                 group_id = H5G.open(obj.fileHandle, mode);
-            elseif (mode == 'Brillouin')
+            elseif strcmp(mode, 'Brillouin')
                 group_id = obj.fileHandle;
             else
                 ME = MException('H5BM:modeNotSupported', ...
