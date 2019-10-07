@@ -2,7 +2,7 @@
 #include "h5bm.h"
 #include "filesystem"
 
-using namespace std::experimental::filesystem::v1;
+using namespace std::filesystem;
 
 H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 	: QObject(parent) {
