@@ -7,13 +7,13 @@
 
 template<typename Enum>
 struct EnableBitMaskOperators {
-	static const bool enable = false;
+	static const bool enable{ false };
 };
 
 #define ENABLE_BITMASK_OPERATORS(x)	\
 template<>							\
 struct EnableBitMaskOperators<x> {	\
-	static const bool enable = true;\
+	static const bool enable{ true };\
 };
 
 template<typename T>

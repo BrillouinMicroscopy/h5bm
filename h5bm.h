@@ -152,86 +152,6 @@ public:
 class H5BM : public QObject {
 	Q_OBJECT
 
-private:
-	bool m_fileWritable = false;
-	bool m_fileValid = false;
-
-	const std::string m_versionstring = "H5BM-v0.0.4";
-	hid_t m_file = -1;		// handle to the opened file, default initialize to indicate no open file
-
-	/*
-	 *	Brillouin handles
-	 */
-	ModeHandles m_Brillouin{ ACQUISITION_MODE::BRILLOUIN, "Brillouin"};
-
-	/*
-	 *	ODT handles
-	 */
-	ModeHandles m_ODT{ ACQUISITION_MODE::ODT, "ODT" };
-
-	/*
-	 *	Fluorescence handles
-	 */
-	ModeHandles m_Fluorescence{ ACQUISITION_MODE::FLUORESCENCE, "Fluorescence" };
-
-	template<class T>
-	inline hid_t get_memtype();
-
-	#define HDF5_WRAPPER_SPECIALIZE_TYPE(T, tid) \
-	template<> inline hid_t get_memtype<T>() { \
-		return H5Tcopy(tid); \
-	} \
-
-	HDF5_WRAPPER_SPECIALIZE_TYPE(int, H5T_NATIVE_INT)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned int, H5T_NATIVE_UINT)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned short, H5T_NATIVE_USHORT)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long long, H5T_NATIVE_ULLONG)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(long long, H5T_NATIVE_LLONG)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(char, H5T_NATIVE_CHAR)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned char, H5T_NATIVE_UCHAR)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(float, H5T_NATIVE_FLOAT)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(double, H5T_NATIVE_DOUBLE)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(bool, H5T_NATIVE_CHAR)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long, H5T_NATIVE_ULONG)
-	HDF5_WRAPPER_SPECIALIZE_TYPE(long, H5T_NATIVE_LONG)
-
-	void getRootHandle(ModeHandles &handle, bool create);
-
-	void getRepetitionHandle(ModeHandles &handle, bool create);
-	void getGroupHandles(ModeHandles &handle, bool create = false);
-
-	// set/get attribute
-
-	template<typename T>
-	void setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t type_id);
-	void setAttribute(std::string attrName, std::string attr, hid_t parent);
-	void setAttribute(std::string attrName, int attr, hid_t parent);
-	void setAttribute(std::string attrName, double attr, hid_t parent);
-	template<typename T>
-	void setAttribute(std::string attrName, T attr);
-
-	template<typename T>
-	T getAttribute(std::string attrName, hid_t parent);
-	template<>
-	std::string getAttribute(std::string attrName, hid_t parent);
-	template<typename T>
-	T getAttribute(std::string attrName);
-
-	template <typename T>
-	hid_t setDataset(hid_t parent, std::vector<T> data, std::string name, const int rank, const hsize_t *dims);
-	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
-
-	template <typename T>
-	void setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
-		std::string date, std::string sample = "", double shift = NULL, std::string channel = "");
-
-	std::vector<double> getData(std::string name, hid_t parent);
-	std::string getDate(std::string name, hid_t parent);
-	
-	std::string calculateIndex(int indX, int indY, int indZ);
-
-	std::string getNow();
-
 public:
 	H5BM(
 		QObject *parent = 0,
@@ -284,6 +204,86 @@ public:
 	std::string getCalibrationDate(int index);
 	std::string getCalibrationSample(int index);
 	double getCalibrationShift(int index);
+
+private:
+	bool m_fileWritable = false;
+	bool m_fileValid = false;
+
+	const std::string m_versionstring = "H5BM-v0.0.4";
+	hid_t m_file{ -1 };		// handle to the opened file, default initialize to indicate no open file
+
+	/*
+	 *	Brillouin handles
+	 */
+	ModeHandles m_Brillouin{ ACQUISITION_MODE::BRILLOUIN, "Brillouin" };
+
+	/*
+	 *	ODT handles
+	 */
+	ModeHandles m_ODT{ ACQUISITION_MODE::ODT, "ODT" };
+
+	/*
+	 *	Fluorescence handles
+	 */
+	ModeHandles m_Fluorescence{ ACQUISITION_MODE::FLUORESCENCE, "Fluorescence" };
+
+	template<class T>
+	inline hid_t get_memtype();
+
+#define HDF5_WRAPPER_SPECIALIZE_TYPE(T, tid) \
+	template<> inline hid_t get_memtype<T>() { \
+		return H5Tcopy(tid); \
+	} \
+
+	HDF5_WRAPPER_SPECIALIZE_TYPE(int, H5T_NATIVE_INT)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned int, H5T_NATIVE_UINT)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned short, H5T_NATIVE_USHORT)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long long, H5T_NATIVE_ULLONG)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(long long, H5T_NATIVE_LLONG)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(char, H5T_NATIVE_CHAR)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned char, H5T_NATIVE_UCHAR)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(float, H5T_NATIVE_FLOAT)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(double, H5T_NATIVE_DOUBLE)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(bool, H5T_NATIVE_CHAR)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long, H5T_NATIVE_ULONG)
+		HDF5_WRAPPER_SPECIALIZE_TYPE(long, H5T_NATIVE_LONG)
+
+		void getRootHandle(ModeHandles& handle, bool create);
+
+	void getRepetitionHandle(ModeHandles& handle, bool create);
+	void getGroupHandles(ModeHandles& handle, bool create = false);
+
+	// set/get attribute
+
+	template<typename T>
+	void setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t type_id);
+	void setAttribute(std::string attrName, std::string attr, hid_t parent);
+	void setAttribute(std::string attrName, int attr, hid_t parent);
+	void setAttribute(std::string attrName, double attr, hid_t parent);
+	template<typename T>
+	void setAttribute(std::string attrName, T attr);
+
+	template<typename T>
+	T getAttribute(std::string attrName, hid_t parent);
+	template<>
+	std::string getAttribute(std::string attrName, hid_t parent);
+	template<typename T>
+	T getAttribute(std::string attrName);
+
+	template <typename T>
+	hid_t setDataset(hid_t parent, std::vector<T> data, std::string name, const int rank, const hsize_t* dims);
+	void getDataset(std::vector<double>* data, hid_t parent, std::string name);
+
+	template <typename T>
+	void setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t* dims,
+		std::string date, std::string sample = "", double shift = NULL, std::string channel = "");
+
+	std::vector<double> getData(std::string name, hid_t parent);
+	std::string getDate(std::string name, hid_t parent);
+
+	std::string calculateIndex(int indX, int indY, int indZ);
+
+	std::string getNow();
 };
 
 template <typename T>

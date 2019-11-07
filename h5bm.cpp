@@ -142,8 +142,7 @@ T H5BM::getAttribute(std::string attrName, hid_t parent) {
 		hid_t attr_type = H5Aget_type(attr_id);
 		H5Aread(attr_id, attr_type, &buf);
 		H5Aclose(attr_id);
-	}
-	catch (int e) {
+	} catch (int e) {
 		// attribute was not found
 	}
 	return buf;
