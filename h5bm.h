@@ -11,8 +11,9 @@
 
 struct IMAGE {
 public:
-	IMAGE(int indX, int indY, int indZ, int rank, hsize_t *dims, std::string date, std::vector<unsigned short> data) :
-		indX(indX), indY(indY), indZ(indZ), rank(rank), dims(dims), date(date), data(data) {};
+	IMAGE(int indX, int indY, int indZ, int rank, hsize_t* dims, std::string date, std::vector<unsigned short> data,
+		double exposure = 0, double gain = 1, std::string binning = "1x1") :
+		indX(indX), indY(indY), indZ(indZ), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), binning(binning) {};
 
 	const int indX;
 	const int indY;
@@ -21,12 +22,16 @@ public:
 	const hsize_t *dims;
 	const std::string date;
 	const std::vector<unsigned short> data;
+	const double exposure;
+	const double gain;
+	const std::string binning;
 };
 
 struct CALIBRATION {
 public:
-	CALIBRATION(int index, std::vector<unsigned short> data, int rank, hsize_t *dims, std::string sample, double shift, std::string date) :
-		index(index), data(data), rank(rank), dims(dims), sample(sample), shift(shift), date(date) {};
+	CALIBRATION(int index, std::vector<unsigned short> data, int rank, hsize_t *dims, std::string sample, double shift, std::string date,
+		double exposure = 0, double gain = 1, std::string binning = "1x1") :
+		index(index), data(data), rank(rank), dims(dims), sample(sample), shift(shift), date(date), exposure(exposure), gain(gain), binning(binning) {};
 
 	const int index;
 	const std::vector<unsigned short> data;
@@ -35,24 +40,32 @@ public:
 	const std::string sample;
 	const double shift;
 	const std::string date;
+	const double exposure;
+	const double gain;
+	const std::string binning;
 };
 
 struct ODTIMAGE {
 public:
-	ODTIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::vector<unsigned char> data) :
-		ind(ind), rank(rank), dims(dims), date(date), data(data) {};
+	ODTIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::vector<unsigned char> data,
+		double exposure = 0, double gain = 1, std::string binning = "1x1") :
+		ind(ind), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), binning(binning) {};
 
 	const int ind;
 	const int rank;
 	const hsize_t *dims;
 	const std::string date;
 	const std::vector<unsigned char> data;
+	const double exposure;
+	const double gain;
+	const std::string binning;
 };
 
 struct FLUOIMAGE {
 public:
-	FLUOIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::string channel, std::vector<unsigned char> data) :
-		ind(ind), rank(rank), dims(dims), date(date), channel(channel), data(data) {};
+	FLUOIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::string channel, std::vector<unsigned char> data,
+		double exposure = 0, double gain = 1, std::string binning = "1x1") :
+		ind(ind), rank(rank), dims(dims), date(date), channel(channel), data(data), exposure(exposure), gain(gain), binning(binning) {};
 
 	const int ind;
 	const int rank;
@@ -60,6 +73,9 @@ public:
 	const std::string date;
 	const std::string channel;
 	const std::vector<unsigned char> data;
+	const double exposure;
+	const double gain;
+	const std::string binning;
 };
 
 enum class ACQUISITION_MODE {
@@ -184,7 +200,8 @@ public:
 
 	// payload data
 	template <typename T>
-	void setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now");
+	void setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now",
+			double exposure = 0, double gain = 1, std::string binning = "1x1");
 	void setPayloadData(IMAGE *);
 	void setPayloadData(ODTIMAGE *);
 	void setPayloadData(FLUOIMAGE *);
@@ -193,13 +210,15 @@ public:
 
 	// background data
 	template <typename T>
-	void setBackgroundData(const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now");
+	void setBackgroundData(const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now",
+		double exposure = 0, double gain = 1, std::string binning = "1x1");
 	std::vector<double> getBackgroundData();
 	std::string getBackgroundDate();
 
 	// calibration data
 	template <typename T>
-	void setCalibrationData(int index, const std::vector<T> data, const int rank, const hsize_t *dims, std::string sample, double shift, std::string date = "now");
+	void setCalibrationData(int index, const std::vector<T> data, const int rank, const hsize_t *dims, std::string sample, double shift, std::string date = "now",
+		double exposure = 0, double gain = 1, std::string binning = "1x1");
 	std::vector<double> getCalibrationData(int index);
 	std::string getCalibrationDate(int index);
 	std::string getCalibrationSample(int index);
@@ -276,7 +295,8 @@ private:
 
 	template <typename T>
 	void setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t* dims,
-		std::string date, std::string sample = "", double shift = NULL, std::string channel = "");
+		std::string date, std::string sample = "", double shift = NULL, std::string channel = "",
+			double exposure = 0, double gain = 1, std::string binning = "1x1");
 
 	std::vector<double> getData(std::string name, hid_t parent);
 	std::string getDate(std::string name, hid_t parent);
@@ -308,7 +328,7 @@ hid_t H5BM::setDataset(hid_t parent, std::vector<T> data, std::string name, cons
 
 template <typename T>
 void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const int rank, const hsize_t *dims,
-	std::string date, std::string sample, double shift, std::string channel) {
+	std::string date, std::string sample, double shift, std::string channel, double exposure, double gain, std::string binning) {
 	if (!m_fileWritable) {
 		return;
 	}
@@ -343,6 +363,11 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 		setAttribute("channel", channel, dset_id);
 	}
 
+	// set camera meta data
+	setAttribute("exposure", exposure, dset_id);
+	setAttribute("gain", gain, dset_id);
+	setAttribute("binning", binning.c_str(), dset_id);
+
 	H5Dclose(dset_id);
 
 	// write last-modified date to file
@@ -350,21 +375,24 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 }
 
 template <typename T>
-void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date) {
+void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date,
+		double exposure, double gain, std::string binning) {
 	auto name = calculateIndex(indX, indY, indZ);
 
-	setData(data, name, m_Brillouin.groups->payloadData, rank, dims, date);
+	setData(data, name, m_Brillouin.groups->payloadData, rank, dims, date, "", NULL, "", exposure, gain, binning);
 }
 
 template <typename T>
-void H5BM::setCalibrationData(int index, const std::vector<T> data, const int rank, const hsize_t * dims, std::string sample, double shift, std::string date) {
-	setData(data, std::to_string(index), m_Brillouin.groups->calibrationData, rank, dims, date, sample, shift);
+void H5BM::setCalibrationData(int index, const std::vector<T> data, const int rank, const hsize_t * dims, std::string sample, double shift, std::string date,
+	double exposure, double gain, std::string binning) {
+	setData(data, std::to_string(index), m_Brillouin.groups->calibrationData, rank, dims, date, sample, shift, "", exposure, gain, binning);
 }
 
 template <typename T>
-void H5BM::setBackgroundData(const std::vector<T> data, const int rank, const hsize_t *dims, std::string date) {
+void H5BM::setBackgroundData(const std::vector<T> data, const int rank, const hsize_t *dims, std::string date,
+	double exposure, double gain, std::string binning) {
 	// legacy: this should actually be stored under "backgroundData"
-	setData(data, "1", m_Brillouin.groups->background, rank, dims, date);
+	setData(data, "1", m_Brillouin.groups->background, rank, dims, date, "", NULL, "", exposure, gain, binning);
 }
 
 #endif // H5BM_H
