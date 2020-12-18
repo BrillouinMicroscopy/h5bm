@@ -94,6 +94,13 @@ void H5BM::getRepetitionHandle(ModeHandles &handle, bool create) {
 	handle.groups = std::make_unique <RepetitionHandles>(handle.mode, handle.currentRepetitionHandle, true);
 }
 
+void H5BM::writePoint(hid_t group, std::string subGroupName, POINT2 point) {
+	auto subGroup = H5Gcreate2(group, subGroupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	setAttribute("x", point.x, subGroup);
+	setAttribute("y", point.y, subGroup);
+	H5Gclose(subGroup);
+}
+
 template<typename T>
 void H5BM::setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t type_id) {
 	hsize_t dims[1] = { 1 };
@@ -213,6 +220,24 @@ void H5BM::setResolution(std::string direction, int resolution) {
 int H5BM::getResolution(std::string direction) {
 	direction = "resolution-" + direction;
 	return getAttribute<int>(direction, m_Brillouin.groups->payload);
+}
+
+void H5BM::setScaleCalibration(ScaleCalibrationDataExtended scaleCalibration) {
+	// Create scaleCalibration group
+	auto scaleCalibrationGroup = H5Gcreate2(m_Brillouin.groups->payload, "scaleCalibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+	writePoint(scaleCalibrationGroup, "origin", scaleCalibration.originPix);
+
+	writePoint(scaleCalibrationGroup, "pixToMicrometerX", scaleCalibration.pixToMicrometerX);
+	writePoint(scaleCalibrationGroup, "pixToMicrometerY", scaleCalibration.pixToMicrometerY);
+
+	writePoint(scaleCalibrationGroup, "micrometerToPixX", scaleCalibration.micrometerToPixX);
+	writePoint(scaleCalibrationGroup, "micrometerToPixY", scaleCalibration.micrometerToPixY);
+
+	writePoint(scaleCalibrationGroup, "positionStage", { scaleCalibration.positionStage.x, scaleCalibration.positionStage.y });
+	writePoint(scaleCalibrationGroup, "positionScanner", { scaleCalibration.positionScanner.x, scaleCalibration.positionScanner.y });
+
+	H5Gclose(scaleCalibrationGroup);
 }
 
 void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name) {
