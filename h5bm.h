@@ -8,6 +8,7 @@
 
 #include "hdf5.h"
 #include "TypesafeBitmask.h"
+#include "..\..\src\Acquisition\AcquisitionModes\ScaleCalibrationHelper.h"
 
 struct IMAGE {
 public:
@@ -76,6 +77,11 @@ public:
 	const double exposure;
 	const double gain;
 	const std::string binning;
+};
+
+struct ScaleCalibrationDataExtended : ScaleCalibrationData {
+	POINT3 positionStage{ 0, 0, 0 };	// [micrometer] position of the stage
+	POINT3 positionScanner{ 0, 0, 0 };	// [micrometer] position of the scanner
 };
 
 enum class ACQUISITION_MODE {
@@ -195,6 +201,9 @@ public:
 	void setResolution(std::string direction, int resolution);
 	int getResolution(std::string direction);
 
+	// scale calibration
+	void setScaleCalibration(ScaleCalibrationDataExtended calibration);
+
 	// positions
 	void setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims);
 	std::vector<double> getPositions(std::string direction);
@@ -272,6 +281,8 @@ private:
 
 	void getRepetitionHandle(ModeHandles& handle, bool create);
 	void getGroupHandles(ModeHandles& handle, bool create = false);
+
+	void writePoint(hid_t group, std::string subGroupName, POINT2 point);
 
 	// set/get attribute
 
