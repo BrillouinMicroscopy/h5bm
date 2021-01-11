@@ -216,6 +216,17 @@ classdef h5bm < handle
                 catch
                     error('Could not determine the members of this group.');
                 end
+            elseif strcmp(type, 'exposure')
+                try
+                    dset_id = H5D.open(obj.payloadDataHandle(mode, repetition), num2str(imageNr));
+                    attr_id = H5A.open(dset_id, 'exposure');
+                    data = H5A.read(attr_id);
+                    data = transpose(data);
+                catch
+                    % The exposure time is only saved for newer files, so
+                    % we fall back to an error value.
+                    data = NaN;
+                end
             else
                 error('The specified data type is not supported.');
             end
