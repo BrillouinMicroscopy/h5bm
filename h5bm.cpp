@@ -52,21 +52,24 @@ void H5BM::getRootHandle(ModeHandles &handle, bool create) {
 	}
 }
 
-void H5BM::newRepetition(ACQUISITION_MODE mode) {
-	ModeHandles *handle;
+ModeHandles* H5BM::getModeHandle(ACQUISITION_MODE mode) {
 	switch (mode) {
 		case ACQUISITION_MODE::BRILLOUIN:
-			handle = &m_Brillouin;
+			return &m_Brillouin;
 			break;
 		case ACQUISITION_MODE::ODT:
-			handle = &m_ODT;
+			return &m_ODT;
 			break;
 		case ACQUISITION_MODE::FLUORESCENCE:
-			handle = &m_Fluorescence;
+			return &m_Fluorescence;
 			break;
 		default:
-			return;
+			return nullptr;
 	}
+}
+
+void H5BM::newRepetition(ACQUISITION_MODE mode) {
+	auto handle = getModeHandle(mode);
 	getRepetitionHandle(*handle, true);
 }
 
@@ -222,9 +225,10 @@ int H5BM::getResolution(std::string direction) {
 	return getAttribute<int>(direction, m_Brillouin.groups->payload);
 }
 
-void H5BM::setScaleCalibration(ScaleCalibrationDataExtended scaleCalibration) {
+void H5BM::setScaleCalibration(ACQUISITION_MODE mode, ScaleCalibrationDataExtended scaleCalibration) {
 	// Create scaleCalibration group
-	auto scaleCalibrationGroup = H5Gcreate2(m_Brillouin.groups->payload, "scaleCalibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	auto modeHandle = getModeHandle(mode);
+	auto scaleCalibrationGroup = H5Gcreate2(modeHandle->groups->payload, "scaleCalibration", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
 	writePoint(scaleCalibrationGroup, "origin", scaleCalibration.originPix);
 

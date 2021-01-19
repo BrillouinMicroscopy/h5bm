@@ -183,6 +183,7 @@ public:
 	) noexcept;
 	~H5BM();
 
+	ModeHandles* getModeHandle(ACQUISITION_MODE mode);
 	void newRepetition(ACQUISITION_MODE mode);
 
 	// date
@@ -202,7 +203,7 @@ public:
 	int getResolution(std::string direction);
 
 	// scale calibration
-	void setScaleCalibration(ScaleCalibrationDataExtended calibration);
+	void setScaleCalibration(ACQUISITION_MODE mode, ScaleCalibrationDataExtended calibration);
 
 	// positions
 	void setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims);
