@@ -108,12 +108,15 @@ struct RepetitionHandles {
 public:
 	RepetitionHandles(ACQUISITION_MODE mode, hid_t handle, bool create) { initialize(mode, handle, create); };
 	~RepetitionHandles() {
-		H5Gclose(payload);
-		H5Gclose(payloadData);
-		H5Gclose(background);
-		H5Gclose(backgroundData);
-		H5Gclose(calibration);
-		H5Gclose(calibrationData);
+		close();
+	}
+	void close() {
+		closeGroup(calibrationData);
+		closeGroup(calibration);
+		closeGroup(backgroundData);
+		closeGroup(background);
+		closeGroup(payloadData);
+		closeGroup(payload);
 	}
 
 private:
@@ -152,6 +155,14 @@ private:
 			}
 		}
 	}
+
+	void closeGroup(hid_t& group) {
+		if (group > -1) {
+			if (H5Gclose(group) > -1) {
+				group = -1;
+			}
+		}
+	}
 };
 
 struct ModeHandles {
@@ -167,9 +178,24 @@ struct ModeHandles {
 public:
 	ModeHandles(ACQUISITION_MODE mode, std::string modename) : mode(mode), modename(modename) {};
 	~ModeHandles() {
-		H5Gclose(rootHandle);
-		H5Gclose(currentRepetitionHandle);
+		if (groups) {
+			groups->close();
+		}
+		close();
 	};
+	void close() {
+		closeGroup(currentRepetitionHandle);
+		closeGroup(rootHandle);
+	}
+
+private:
+	void closeGroup(hid_t& group) {
+		if (group > -1) {
+			if (H5Gclose(group) > -1) {
+				group = -1;
+			}
+		}
+	}
 };
 
 class H5BM : public QObject {
@@ -257,6 +283,9 @@ private:
 	 */
 	ModeHandles m_Fluorescence{ ACQUISITION_MODE::FLUORESCENCE, "Fluorescence" };
 
+	void closeGroup(hid_t& group);
+	void closeDataset(hid_t& dataset);
+
 	template<class T>
 	inline hid_t get_memtype();
 
@@ -288,7 +317,7 @@ private:
 	// set/get attribute
 
 	template<typename T>
-	void setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t type_id);
+	void setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t& type_id);
 	void setAttribute(std::string attrName, std::string attr, hid_t parent);
 	void setAttribute(std::string attrName, int attr, hid_t parent);
 	void setAttribute(std::string attrName, double attr, hid_t parent);
@@ -381,7 +410,7 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 	setAttribute("gain", gain, dset_id);
 	setAttribute("binning", binning.c_str(), dset_id);
 
-	H5Dclose(dset_id);
+	closeDataset(dset_id);
 
 	// write last-modified date to file
 	setAttribute("last-modified", getNow());
