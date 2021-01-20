@@ -41,7 +41,15 @@ H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
 }
 
 H5BM::~H5BM() {
-	H5Fclose(m_file);
+	H5Fflush(m_file, H5F_SCOPE_GLOBAL);
+	m_Brillouin.close();
+	m_ODT.close();
+	m_Fluorescence.close();
+	if (m_file > -1) {
+		if (H5Fclose(m_file) > -1) {
+			m_file = -1;
+		}
+	}
 }
 
 void H5BM::getRootHandle(ModeHandles &handle, bool create) {
@@ -74,14 +82,14 @@ void H5BM::newRepetition(ACQUISITION_MODE mode) {
 }
 
 void H5BM::getRepetitionHandle(ModeHandles &handle, bool create) {
-	if (handle.currentRepetitionHandle) {
-		H5Gclose(handle.currentRepetitionHandle);
-	}
+	closeGroup(handle.currentRepetitionHandle);
+
 	std::string repetitionCountString = std::to_string(handle.repetitionCount);
 	handle.currentRepetitionHandle = H5Gopen2(handle.rootHandle, repetitionCountString.c_str(), H5P_DEFAULT);
 	// Check for existing repetitions and do not override them
 	while (handle.currentRepetitionHandle > -1) {
-		H5Gclose(handle.currentRepetitionHandle);
+		closeGroup(handle.currentRepetitionHandle);
+
 		repetitionCountString = std::to_string(++handle.repetitionCount);
 		handle.currentRepetitionHandle = H5Gopen2(handle.rootHandle, repetitionCountString.c_str(), H5P_DEFAULT);
 	}
@@ -101,11 +109,11 @@ void H5BM::writePoint(hid_t group, std::string subGroupName, POINT2 point) {
 	auto subGroup = H5Gcreate2(group, subGroupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	setAttribute("x", point.x, subGroup);
 	setAttribute("y", point.y, subGroup);
-	H5Gclose(subGroup);
+	closeGroup(subGroup);
 }
 
 template<typename T>
-void H5BM::setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t type_id) {
+void H5BM::setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t& type_id) {
 	hsize_t dims[1] = { 1 };
 	hsize_t maxdims[1] = { 1 };
 	hid_t space_id = H5Screate_simple(1, dims, maxdims);
@@ -126,16 +134,19 @@ void H5BM::setAttribute(std::string attrName, std::string attr, hid_t parent) {
 	hid_t type_id = H5Tcopy(H5T_C_S1);
 	H5Tset_size(type_id, attr.length());
 	setAttribute(attrName, attr.c_str(), parent, type_id);
+	H5Tclose(type_id);
 }
 
 void H5BM::setAttribute(std::string attrName, int attr, hid_t parent) {
 	hid_t type_id = H5Tcopy(H5T_NATIVE_INT);
 	setAttribute(attrName, &attr, parent, type_id);
+	H5Tclose(type_id);
 }
 
 void H5BM::setAttribute(std::string attrName, double attr, hid_t parent) {
 	hid_t type_id = H5Tcopy(H5T_NATIVE_DOUBLE);
 	setAttribute(attrName, &attr, parent, type_id);
+	H5Tclose(type_id);
 }
 
 template<typename T>
@@ -151,6 +162,7 @@ T H5BM::getAttribute(std::string attrName, hid_t parent) {
 		hsize_t attr_size = H5Aget_storage_size(attr_id);
 		hid_t attr_type = H5Aget_type(attr_id);
 		H5Aread(attr_id, attr_type, &buf);
+		H5Tclose(attr_type);
 		H5Aclose(attr_id);
 	} catch (int e) {
 		// attribute was not found
@@ -170,6 +182,7 @@ std::string H5BM::getAttribute(std::string attrName, hid_t parent) {
 		string.assign(buf, attr_size);
 		delete[] buf;
 		buf = nullptr;
+		H5Tclose(attr_type);
 		H5Aclose(attr_id);
 	} catch (int e) {
 		// attribute was not found
@@ -241,7 +254,7 @@ void H5BM::setScaleCalibration(ACQUISITION_MODE mode, ScaleCalibrationDataExtend
 	writePoint(scaleCalibrationGroup, "positionStage", { scaleCalibration.positionStage.x, scaleCalibration.positionStage.y });
 	writePoint(scaleCalibrationGroup, "positionScanner", { scaleCalibration.positionScanner.x, scaleCalibration.positionScanner.y });
 
-	H5Gclose(scaleCalibrationGroup);
+	closeGroup(scaleCalibrationGroup);
 }
 
 void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name) {
@@ -257,7 +270,8 @@ void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name)
 	data->resize(nrPoints);
 
 	H5Dread(dset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->data());
-	H5Dclose(dset_id);
+	H5Sclose(space_id);
+	closeDataset(dset_id);
 }
 
 void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
@@ -267,7 +281,7 @@ void H5BM::setPositions(std::string direction, const std::vector<double> positio
 	direction = "positions-" + direction;
 
 	hid_t dset_id = setDataset(m_Brillouin.groups->payload, positions, direction, rank, dims);
-	H5Dclose(dset_id);
+	closeDataset(dset_id);
 
 	// write last-modified date to file
 	setAttribute("last-modified", getNow());
@@ -289,8 +303,7 @@ std::vector<double> H5BM::getData(std::string name, hid_t parent) {
 	std::vector<double> data;
 	try {
 		getDataset(&data, parent, name);
-	}
-	catch (int e) {
+	} catch (int e) {
 		//
 	}
 	return data;
@@ -301,7 +314,7 @@ std::string H5BM::getDate(std::string name, hid_t parent) {
 	try {
 		hid_t dset_id = H5Dopen2(parent, name.c_str(), H5P_DEFAULT);;
 		date = getAttribute<std::string>("date", dset_id);
-		H5Dclose(dset_id);
+		closeDataset(dset_id);
 	}
 	catch (int e) {
 		//
@@ -355,6 +368,22 @@ std::string H5BM::getCalibrationSample(int index) {
 
 double H5BM::getCalibrationShift(int index) {
 	return 0.0;
+}
+
+void H5BM::closeGroup(hid_t& group) {
+	if (group > -1) {
+		if (H5Gclose(group) > -1) {
+			group = -1;
+		}
+	}
+}
+
+void H5BM::closeDataset(hid_t& dataset) {
+	if (dataset > -1) {
+		if (H5Dclose(dataset) > -1) {
+			dataset = -1;
+		}
+	}
 }
 
 void H5BM::setPayloadData(IMAGE *image) {
