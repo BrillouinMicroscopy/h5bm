@@ -414,6 +414,8 @@ void H5BM::setData(std::vector<T> data, std::string name, hid_t parent, const in
 
 	// write last-modified date to file
 	setAttribute("last-modified", getNow());
+
+	H5Fflush(m_file, H5F_SCOPE_GLOBAL);
 }
 
 template <typename T>
