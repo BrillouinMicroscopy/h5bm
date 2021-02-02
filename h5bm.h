@@ -10,9 +10,11 @@
 #include "TypesafeBitmask.h"
 #include "..\..\src\Acquisition\AcquisitionModes\ScaleCalibrationHelper.h"
 
+template <typename T>
 struct IMAGE {
 public:
-	IMAGE(int indX, int indY, int indZ, int rank, hsize_t* dims, std::string date, std::vector<unsigned short> data,
+	template <typename T>
+	IMAGE(int indX, int indY, int indZ, int rank, hsize_t* dims, std::string date, std::vector<T> data,
 		double exposure = 0, double gain = 1, std::string binning = "1x1") :
 		indX(indX), indY(indY), indZ(indZ), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), binning(binning) {};
 
@@ -22,20 +24,21 @@ public:
 	const int rank;
 	const hsize_t *dims;
 	const std::string date;
-	const std::vector<unsigned short> data;
+	const std::vector<T> data;
 	const double exposure;
 	const double gain;
 	const std::string binning;
 };
 
+template <typename T>
 struct CALIBRATION {
 public:
-	CALIBRATION(int index, std::vector<unsigned short> data, int rank, hsize_t *dims, std::string sample, double shift, std::string date,
+	CALIBRATION(int index, std::vector<T> data, int rank, hsize_t *dims, std::string sample, double shift, std::string date,
 		double exposure = 0, double gain = 1, std::string binning = "1x1") :
 		index(index), data(data), rank(rank), dims(dims), sample(sample), shift(shift), date(date), exposure(exposure), gain(gain), binning(binning) {};
 
 	const int index;
-	const std::vector<unsigned short> data;
+	const std::vector<T> data;
 	const int rank;
 	const hsize_t *dims;
 	const std::string sample;
@@ -46,9 +49,10 @@ public:
 	const std::string binning;
 };
 
+template <typename T>
 struct ODTIMAGE {
 public:
-	ODTIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::vector<unsigned char> data,
+	ODTIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::vector<T> data,
 		double exposure = 0, double gain = 1, std::string binning = "1x1") :
 		ind(ind), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), binning(binning) {};
 
@@ -56,15 +60,16 @@ public:
 	const int rank;
 	const hsize_t *dims;
 	const std::string date;
-	const std::vector<unsigned char> data;
+	const std::vector<T> data;
 	const double exposure;
 	const double gain;
 	const std::string binning;
 };
 
+template <typename T>
 struct FLUOIMAGE {
 public:
-	FLUOIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::string channel, std::vector<unsigned char> data,
+	FLUOIMAGE(int ind, int rank, hsize_t *dims, std::string date, std::string channel, std::vector<T> data,
 		double exposure = 0, double gain = 1, std::string binning = "1x1") :
 		ind(ind), rank(rank), dims(dims), date(date), channel(channel), data(data), exposure(exposure), gain(gain), binning(binning) {};
 
@@ -73,7 +78,7 @@ public:
 	const hsize_t *dims;
 	const std::string date;
 	const std::string channel;
-	const std::vector<unsigned char> data;
+	const std::vector<T> data;
 	const double exposure;
 	const double gain;
 	const std::string binning;
@@ -239,9 +244,14 @@ public:
 	template <typename T>
 	void setPayloadData(int indX, int indY, int indZ, const std::vector<T> data, const int rank, const hsize_t *dims, std::string date = "now",
 			double exposure = 0, double gain = 1, std::string binning = "1x1");
-	void setPayloadData(IMAGE *);
-	void setPayloadData(ODTIMAGE *);
-	void setPayloadData(FLUOIMAGE *);
+
+	template <typename T>
+	void setPayloadData(IMAGE<T>*);
+	template <typename T>
+	void setPayloadData(ODTIMAGE<T>*);
+	template <typename T>
+	void setPayloadData(FLUOIMAGE<T>*);
+
 	std::vector<double> getPayloadData(int indX, int indY, int indZ);
 	std::string getPayloadDate(int indX, int indY, int indZ);
 
@@ -295,19 +305,19 @@ private:
 	} \
 
 	HDF5_WRAPPER_SPECIALIZE_TYPE(int, H5T_NATIVE_INT)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned int, H5T_NATIVE_UINT)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned short, H5T_NATIVE_USHORT)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long long, H5T_NATIVE_ULLONG)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(long long, H5T_NATIVE_LLONG)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(char, H5T_NATIVE_CHAR)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned char, H5T_NATIVE_UCHAR)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(float, H5T_NATIVE_FLOAT)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(double, H5T_NATIVE_DOUBLE)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(bool, H5T_NATIVE_CHAR)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long, H5T_NATIVE_ULONG)
-		HDF5_WRAPPER_SPECIALIZE_TYPE(long, H5T_NATIVE_LONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned int, H5T_NATIVE_UINT)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned short, H5T_NATIVE_USHORT)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long long, H5T_NATIVE_ULLONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(long long, H5T_NATIVE_LLONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(char, H5T_NATIVE_CHAR)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned char, H5T_NATIVE_UCHAR)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(float, H5T_NATIVE_FLOAT)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(double, H5T_NATIVE_DOUBLE)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(bool, H5T_NATIVE_CHAR)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long, H5T_NATIVE_ULONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(long, H5T_NATIVE_LONG)
 
-		void getRootHandle(ModeHandles& handle, bool create);
+	void getRootHandle(ModeHandles& handle, bool create);
 
 	void getRepetitionHandle(ModeHandles& handle, bool create);
 	void getGroupHandles(ModeHandles& handle, bool create = false);
@@ -437,6 +447,30 @@ void H5BM::setBackgroundData(const std::vector<T> data, const int rank, const hs
 	double exposure, double gain, std::string binning) {
 	// legacy: this should actually be stored under "backgroundData"
 	setData(data, "1", m_Brillouin.groups->background, rank, dims, date, "", NULL, "", exposure, gain, binning);
+}
+
+template <typename T>
+void H5BM::setPayloadData(IMAGE<T>* image) {
+	auto name = calculateIndex(image->indX, image->indY, image->indZ);
+
+	setData(image->data, name, m_Brillouin.groups->payloadData, image->rank, image->dims, image->date,
+		"", NULL, "", image->exposure, image->gain, image->binning);
+}
+
+template <typename T>
+void H5BM::setPayloadData(ODTIMAGE<T>* image) {
+	auto name = std::to_string(image->ind);
+
+	setData(image->data, name, m_ODT.groups->payloadData, image->rank, image->dims, image->date,
+		"", NULL, "", image->exposure, image->gain, image->binning);
+}
+
+template <typename T>
+void H5BM::setPayloadData(FLUOIMAGE<T>* image) {
+	auto name = std::to_string(image->ind);
+
+	setData(image->data, name, m_Fluorescence.groups->payloadData, image->rank, image->dims, image->date, "", NULL, image->channel,
+		image->exposure, image->gain, image->binning);
 }
 
 #endif // H5BM_H
