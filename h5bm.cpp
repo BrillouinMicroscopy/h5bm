@@ -4,7 +4,7 @@
 
 using namespace std::filesystem;
 
-H5BM::H5BM(QObject *parent, const std::string filename, int flags) noexcept
+H5BM::H5BM(QObject *parent, const std::string& filename, int flags) noexcept
 	: QObject(parent) {
 	if (flags & H5F_ACC_RDONLY) {
 		m_fileWritable = false;
@@ -137,13 +137,13 @@ void H5BM::setAttribute(std::string attrName, std::string attr, hid_t parent) {
 	H5Tclose(type_id);
 }
 
-void H5BM::setAttribute(std::string attrName, int attr, hid_t parent) {
+void H5BM::setAttribute(const std::string& attrName, int attr, hid_t parent) {
 	hid_t type_id = H5Tcopy(H5T_NATIVE_INT);
 	setAttribute(attrName, &attr, parent, type_id);
 	H5Tclose(type_id);
 }
 
-void H5BM::setAttribute(std::string attrName, double attr, hid_t parent) {
+void H5BM::setAttribute(const std::string& attrName, double attr, hid_t parent) {
 	hid_t type_id = H5Tcopy(H5T_NATIVE_DOUBLE);
 	setAttribute(attrName, &attr, parent, type_id);
 	H5Tclose(type_id);
@@ -195,7 +195,7 @@ T H5BM::getAttribute(std::string attrName) {
 	return getAttribute<T>(attrName, m_file);
 }
 
-void H5BM::setDate(std::string date) {
+void H5BM::setDate(const std::string& date) {
 	std::string attrName = "date";
 	setAttribute(attrName, date);
 
@@ -212,7 +212,7 @@ std::string H5BM::getVersion() {
 	return getAttribute<std::string>(attrName);
 }
 
-void H5BM::setComment(std::string comment) {
+void H5BM::setComment(const std::string& comment) {
 	std::string attrName = "comment";
 	setAttribute(attrName, comment);
 
@@ -274,7 +274,7 @@ void H5BM::getDataset(std::vector<double>* data, hid_t parent, std::string name)
 	closeDataset(dset_id);
 }
 
-void H5BM::setPositions(std::string direction, const std::vector<double> positions, const int rank, const hsize_t *dims) {
+void H5BM::setPositions(std::string direction, const std::vector<double>& positions, const int rank, const hsize_t *dims) {
 	if (!m_fileWritable) {
 		return;
 	}
@@ -299,7 +299,7 @@ std::vector<double> H5BM::getPositions(std::string direction) {
 	return positions;
 }
 
-std::vector<double> H5BM::getData(std::string name, hid_t parent) {
+std::vector<double> H5BM::getData(const std::string& name, hid_t parent) {
 	std::vector<double> data;
 	try {
 		getDataset(&data, parent, name);
