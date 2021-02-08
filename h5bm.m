@@ -153,6 +153,29 @@ classdef h5bm < handle
             end
         end
         
+        %% Get the scale calibration data for a specific repetition
+        function scaleCalibration = getScaleCalibration(obj, mode, repetition)
+            payload_group = obj.payloadHandle(mode, repetition);
+            try
+                scaleCalibration_group = H5G.open(payload_group, 'scaleCalibration');
+                points = {'micrometerToPixX', 'micrometerToPixY', 'origin', ...
+                    'pixToMicrometerX', 'pixToMicrometerY', 'positionScanner', 'positionStage'};
+                scaleCalibration = struct();
+                for jj = 1:length(points)
+                    group = H5G.open(scaleCalibration_group, points{jj});
+                    attr_x = H5A.open(group, 'x');
+                    x = H5A.read(attr_x);
+                    H5A.close(attr_x);
+                    attr_y = H5A.open(group, 'y');
+                    y = H5A.read(attr_y);
+                    H5A.close(attr_y);
+                    scaleCalibration.(points{jj}) = [x y];
+                end
+            catch e
+                error(['The scale calibration is invalid: ' e.message]);
+            end
+        end
+        
         %% Get the payload data for the specified mode
         function data = readPayloadData (varargin)
             obj = varargin{1};
