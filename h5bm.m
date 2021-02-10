@@ -250,6 +250,20 @@ classdef h5bm < handle
                     % we fall back to an error value.
                     data = NaN;
                 end
+            elseif strcmp(type, 'ROI')
+                try
+                    data = struct();
+                    attributes = {'left', 'bottom', 'width', 'height'};
+                    for jj = 1:length(attributes)
+                        dset_id = H5D.open(obj.payloadDataHandle(mode, repetition), num2str(imageNr));
+                        attr_id = H5A.open(dset_id, ['ROI_' attributes{jj}]);
+                        data.(attributes{jj}) = double(H5A.read(attr_id));
+                        H5A.close(attr_id);
+                        H5D.close(dset_id);
+                    end
+                catch
+                    error(['The attribute ' type ' of the dataset ''%s'' cannot be found.'], num2str(imageNr));
+                end
             else
                 error('The specified data type is not supported.');
             end
