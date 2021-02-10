@@ -253,13 +253,23 @@ classdef h5bm < handle
             elseif strcmp(type, 'ROI')
                 try
                     data = struct();
-                    attributes = {'left', 'bottom', 'width', 'height'};
+                    attributes = {'left', 'bottom', 'width_physical', 'height_physical', ...
+                        'right', 'top', 'width_binned', 'height_binned'};
+                    found = false;
                     for jj = 1:length(attributes)
-                        dset_id = H5D.open(obj.payloadDataHandle(mode, repetition), num2str(imageNr));
-                        attr_id = H5A.open(dset_id, ['ROI_' attributes{jj}]);
-                        data.(attributes{jj}) = double(H5A.read(attr_id));
-                        H5A.close(attr_id);
-                        H5D.close(dset_id);
+                        try
+                            dset_id = H5D.open(obj.payloadDataHandle(mode, repetition), num2str(imageNr));
+                            attr_id = H5A.open(dset_id, ['ROI_' attributes{jj}]);
+                            data.(attributes{jj}) = double(H5A.read(attr_id));
+                            H5A.close(attr_id);
+                            H5D.close(dset_id);
+                            found = true;
+                        catch
+                            data.(attributes{jj}) = NaN;
+                        end
+                    end
+                    if ~found
+                        throw('ROI data is not available.');
                     end
                 catch
                     error(['The attribute ' type ' of the dataset ''%s'' cannot be found.'], num2str(imageNr));
