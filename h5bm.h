@@ -9,14 +9,15 @@
 #include "hdf5.h"
 #include "TypesafeBitmask.h"
 #include "..\..\src\Acquisition\AcquisitionModes\ScaleCalibrationHelper.h"
+#include "..\..\src\Devices\Cameras\cameraParameters.h"
 
 template <typename T>
 struct IMAGE {
 public:
 	template <typename T>
 	IMAGE(int indX, int indY, int indZ, int rank, hsize_t* dims, const std::string& date, const std::vector<T>& data,
-		double exposure = 0, double gain = 1, const std::string& binning = "1x1") :
-		indX(indX), indY(indY), indZ(indZ), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), binning(binning) {};
+		double exposure = 0, double gain = 1, const CAMERA_ROI& roi = CAMERA_ROI{}) :
+		indX(indX), indY(indY), indZ(indZ), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), roi(roi) {};
 
 	const int indX;
 	const int indY;
@@ -27,15 +28,15 @@ public:
 	const std::vector<T> data;
 	const double exposure;
 	const double gain;
-	const std::string binning;
+	const CAMERA_ROI roi;
 };
 
 template <typename T>
 struct CALIBRATION {
 public:
 	CALIBRATION(int index, const std::vector<T>& data, int rank, hsize_t *dims, const std::string& sample, double shift, const std::string& date,
-		double exposure = 0, double gain = 1, const std::string& binning = "1x1") :
-		index(index), data(data), rank(rank), dims(dims), sample(sample), shift(shift), date(date), exposure(exposure), gain(gain), binning(binning) {};
+		double exposure = 0, double gain = 1, const CAMERA_ROI& roi = CAMERA_ROI{}) :
+		index(index), data(data), rank(rank), dims(dims), sample(sample), shift(shift), date(date), exposure(exposure), gain(gain), roi(roi) {};
 
 	const int index;
 	const std::vector<T> data;
@@ -46,15 +47,15 @@ public:
 	const std::string date;
 	const double exposure;
 	const double gain;
-	const std::string binning;
+	const CAMERA_ROI roi;
 };
 
 template <typename T>
 struct ODTIMAGE {
 public:
 	ODTIMAGE(int ind, int rank, hsize_t *dims, const std::string& date, const std::vector<T>& data,
-		double exposure = 0, double gain = 1, const std::string& binning = "1x1") :
-		ind(ind), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), binning(binning) {};
+		double exposure = 0, double gain = 1, const CAMERA_ROI& roi = CAMERA_ROI{}) :
+		ind(ind), rank(rank), dims(dims), date(date), data(data), exposure(exposure), gain(gain), roi(roi) {};
 
 	const int ind;
 	const int rank;
@@ -63,15 +64,15 @@ public:
 	const std::vector<T> data;
 	const double exposure;
 	const double gain;
-	const std::string binning;
+	const CAMERA_ROI roi;
 };
 
 template <typename T>
 struct FLUOIMAGE {
 public:
 	FLUOIMAGE(int ind, int rank, hsize_t *dims, const std::string& date, const std::string& channel, const std::vector<T>& data,
-		double exposure = 0, double gain = 1, const std::string& binning = "1x1") :
-		ind(ind), rank(rank), dims(dims), date(date), channel(channel), data(data), exposure(exposure), gain(gain), binning(binning) {};
+		double exposure = 0, double gain = 1, const CAMERA_ROI& roi = CAMERA_ROI{}) :
+		ind(ind), rank(rank), dims(dims), date(date), channel(channel), data(data), exposure(exposure), gain(gain), roi(roi) {};
 
 	const int ind;
 	const int rank;
@@ -81,7 +82,7 @@ public:
 	const std::vector<T> data;
 	const double exposure;
 	const double gain;
-	const std::string binning;
+	const CAMERA_ROI roi;
 };
 
 struct ScaleCalibrationDataExtended : ScaleCalibrationData {
@@ -243,7 +244,7 @@ public:
 	// payload data
 	template <typename T>
 	void setPayloadData(int indX, int indY, int indZ, const std::vector<T>& data, const int rank, const hsize_t *dims, const std::string& date = "now",
-			double exposure = 0, double gain = 1, const std::string& binning = "1x1");
+		double exposure = 0, double gain = 1, const CAMERA_ROI& roi = CAMERA_ROI{});
 
 	template <typename T>
 	void setPayloadData(IMAGE<T>*);
@@ -258,14 +259,14 @@ public:
 	// background data
 	template <typename T>
 	void setBackgroundData(const std::vector<T>& data, const int rank, const hsize_t *dims, const std::string& date = "now",
-		double exposure = 0, double gain = 1, const std::string& binning = "1x1");
+		double exposure = 0, double gain = 1, const CAMERA_ROI& roi = CAMERA_ROI{});
 	std::vector<double> getBackgroundData();
 	std::string getBackgroundDate();
 
 	// calibration data
 	template <typename T>
 	void setCalibrationData(int index, const std::vector<T>& data, const int rank, const hsize_t *dims, const std::string& sample,
-		double shift, const std::string& date = "now", double exposure = 0, double gain = 1, const std::string& binning = "1x1");
+		double shift, const std::string& date = "now", double exposure = 0, double gain = 1, const CAMERA_ROI& roi = CAMERA_ROI{});
 	std::vector<double> getCalibrationData(int index);
 	std::string getCalibrationDate(int index);
 	std::string getCalibrationSample(int index);
@@ -316,23 +317,25 @@ private:
 	HDF5_WRAPPER_SPECIALIZE_TYPE(bool, H5T_NATIVE_CHAR)
 	HDF5_WRAPPER_SPECIALIZE_TYPE(unsigned long, H5T_NATIVE_ULONG)
 	HDF5_WRAPPER_SPECIALIZE_TYPE(long, H5T_NATIVE_LONG)
+	HDF5_WRAPPER_SPECIALIZE_TYPE(std::string, H5T_C_S1)
 
 	void getRootHandle(ModeHandles& handle, bool create);
 
 	void getRepetitionHandle(ModeHandles& handle, bool create);
 	void getGroupHandles(ModeHandles& handle, bool create = false);
 
-	void writePoint(hid_t group, std::string subGroupName, POINT2 point);
+	void writePoint(hid_t group, const std::string& subGroupName, POINT2 point);
 
 	// set/get attribute
 
 	template<typename T>
-	void setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t& type_id);
-	void setAttribute(std::string attrName, std::string attr, hid_t parent);
-	void setAttribute(const std::string& attrName, int attr, hid_t parent);
-	void setAttribute(const std::string& attrName, double attr, hid_t parent);
+	void setAttribute(const std::string& attrName, T* attrValue, hid_t parent, hid_t& type_id);
+	void setAttribute(const std::string& attrName, const std::string& attr, hid_t parent);
+	void setAttribute(const std::string& attrName, const char* attr, hid_t parent);
 	template<typename T>
-	void setAttribute(std::string attrName, T attr);
+	void setAttribute(const std::string& attrName, T attr, hid_t parent);
+	template<typename T>
+	void setAttribute(const std::string& attrName, T attr);
 
 	template<typename T>
 	T getAttribute(std::string attrName, hid_t parent);
@@ -347,8 +350,8 @@ private:
 
 	template <typename T>
 	void setData(const std::vector<T>& data, const std::string& name, hid_t parent, const int rank, const hsize_t* dims,
-		std::string date, std::string sample = "", double shift = NULL, const std::string& channel = "",
-		double exposure = 0, double gain = 1, std::string binning = "1x1");
+		std::string date, const std::string& sample = "", double shift = NULL, const std::string& channel = "",
+		double exposure = 0, double gain = 1, CAMERA_ROI roi = CAMERA_ROI{});
 
 	std::vector<double> getData(const std::string& name, hid_t parent);
 	std::string getDate(std::string name, hid_t parent);
@@ -380,7 +383,7 @@ hid_t H5BM::setDataset(hid_t parent, std::vector<T> data, std::string name, cons
 
 template <typename T>
 void H5BM::setData(const std::vector<T>& data, const std::string& name, hid_t parent, const int rank, const hsize_t *dims,
-	std::string date, std::string sample, double shift, const std::string& channel, double exposure, double gain, std::string binning) {
+	std::string date, const std::string& sample, double shift, const std::string& channel, double exposure, double gain, CAMERA_ROI roi) {
 	if (!m_fileWritable) {
 		return;
 	}
@@ -393,7 +396,7 @@ void H5BM::setData(const std::vector<T>& data, const std::string& name, hid_t pa
 	hid_t dset_id = setDataset(parent, data, name, rank, dims);
 
 	// write date
-	setAttribute("date", date.c_str(), dset_id);
+	setAttribute("date", date, dset_id);
 
 	// write image attributes
 	setAttribute("CLASS", "IMAGE", dset_id);
@@ -402,7 +405,7 @@ void H5BM::setData(const std::vector<T>& data, const std::string& name, hid_t pa
 
 	// write sample name
 	if (sample != "") {
-		setAttribute("sample", sample.c_str(), dset_id);
+		setAttribute("sample", sample, dset_id);
 	}
 
 	// write sample name
@@ -418,7 +421,27 @@ void H5BM::setData(const std::vector<T>& data, const std::string& name, hid_t pa
 	// set camera meta data
 	setAttribute("exposure", exposure, dset_id);
 	setAttribute("gain", gain, dset_id);
-	setAttribute("binning", binning.c_str(), dset_id);
+
+	// TODO: Should be replaced by a proper conversion from std::wstring to std::string
+	auto binning = std::string{ "unknown" };
+	if (roi.binning == L"1x1") {
+		binning = "1x1";
+	} else if (roi.binning == L"2x2") {
+		binning = "2x2";
+	} else if (roi.binning == L"4x4") {
+		binning = "4x4";
+	} else if (roi.binning == L"8x8") {
+		binning = "8x8";
+	}
+	setAttribute("binning", binning, dset_id);
+	setAttribute("ROI_left", (int)roi.left, dset_id);
+	setAttribute("ROI_right", (int)roi.right, dset_id);
+	setAttribute("ROI_top", (int)roi.top, dset_id);
+	setAttribute("ROI_bottom", (int)roi.bottom, dset_id);
+	setAttribute("ROI_height_physical", (int)roi.height_physical, dset_id);
+	setAttribute("ROI_width_physical", (int)roi.width_physical, dset_id);
+	setAttribute("ROI_height_binned", (int)roi.height_binned, dset_id);
+	setAttribute("ROI_width_binned", (int)roi.width_binned, dset_id);
 
 	closeDataset(dset_id);
 
@@ -430,23 +453,23 @@ void H5BM::setData(const std::vector<T>& data, const std::string& name, hid_t pa
 
 template <typename T>
 void H5BM::setPayloadData(int indX, int indY, int indZ, const std::vector<T>& data, const int rank, const hsize_t *dims, const std::string& date,
-		double exposure, double gain, const std::string& binning) {
+		double exposure, double gain, const CAMERA_ROI& roi) {
 	auto name = calculateIndex(indX, indY, indZ);
 
-	setData(data, name, m_Brillouin.groups->payloadData, rank, dims, date, "", NULL, "", exposure, gain, binning);
+	setData(data, name, m_Brillouin.groups->payloadData, rank, dims, date, "", NULL, "", exposure, gain, roi);
 }
 
 template <typename T>
 void H5BM::setCalibrationData(int index, const std::vector<T>& data, const int rank, const hsize_t * dims, const std::string& sample,
-	double shift, const std::string& date, double exposure, double gain, const std::string& binning) {
-	setData(data, std::to_string(index), m_Brillouin.groups->calibrationData, rank, dims, date, sample, shift, "", exposure, gain, binning);
+	double shift, const std::string& date, double exposure, double gain, const CAMERA_ROI& roi) {
+	setData(data, std::to_string(index), m_Brillouin.groups->calibrationData, rank, dims, date, sample, shift, "", exposure, gain, roi);
 }
 
 template <typename T>
 void H5BM::setBackgroundData(const std::vector<T>& data, const int rank, const hsize_t *dims, const std::string& date,
-	double exposure, double gain, const std::string& binning) {
+	double exposure, double gain, const CAMERA_ROI& roi) {
 	// legacy: this should actually be stored under "backgroundData"
-	setData(data, "1", m_Brillouin.groups->background, rank, dims, date, "", NULL, "", exposure, gain, binning);
+	setData(data, "1", m_Brillouin.groups->background, rank, dims, date, "", NULL, "", exposure, gain, roi);
 }
 
 template <typename T>
@@ -454,7 +477,7 @@ void H5BM::setPayloadData(IMAGE<T>* image) {
 	auto name = calculateIndex(image->indX, image->indY, image->indZ);
 
 	setData(image->data, name, m_Brillouin.groups->payloadData, image->rank, image->dims, image->date,
-		"", NULL, "", image->exposure, image->gain, image->binning);
+		"", NULL, "", image->exposure, image->gain, image->roi);
 }
 
 template <typename T>
@@ -462,7 +485,7 @@ void H5BM::setPayloadData(ODTIMAGE<T>* image) {
 	auto name = std::to_string(image->ind);
 
 	setData(image->data, name, m_ODT.groups->payloadData, image->rank, image->dims, image->date,
-		"", NULL, "", image->exposure, image->gain, image->binning);
+		"", NULL, "", image->exposure, image->gain, image->roi);
 }
 
 template <typename T>
@@ -470,7 +493,7 @@ void H5BM::setPayloadData(FLUOIMAGE<T>* image) {
 	auto name = std::to_string(image->ind);
 
 	setData(image->data, name, m_Fluorescence.groups->payloadData, image->rank, image->dims, image->date, "", NULL, image->channel,
-		image->exposure, image->gain, image->binning);
+		image->exposure, image->gain, image->roi);
 }
 
 #endif // H5BM_H
