@@ -105,7 +105,7 @@ void H5BM::getRepetitionHandle(ModeHandles &handle, bool create) {
 	handle.groups = std::make_unique <RepetitionHandles>(handle.mode, handle.currentRepetitionHandle, true);
 }
 
-void H5BM::writePoint(hid_t group, std::string subGroupName, POINT2 point) {
+void H5BM::writePoint(hid_t group, const std::string& subGroupName, POINT2 point) {
 	auto subGroup = H5Gcreate2(group, subGroupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 	setAttribute("x", point.x, subGroup);
 	setAttribute("y", point.y, subGroup);
@@ -113,7 +113,7 @@ void H5BM::writePoint(hid_t group, std::string subGroupName, POINT2 point) {
 }
 
 template<typename T>
-void H5BM::setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t& type_id) {
+void H5BM::setAttribute(const std::string& attrName, T* attrValue, hid_t parent, hid_t& type_id) {
 	hsize_t dims[1] = { 1 };
 	hsize_t maxdims[1] = { 1 };
 	hid_t space_id = H5Screate_simple(1, dims, maxdims);
@@ -130,27 +130,26 @@ void H5BM::setAttribute(std::string attrName, T* attrValue, hid_t parent, hid_t&
 	H5Tclose(type_id);
 }
 
-void H5BM::setAttribute(std::string attrName, std::string attr, hid_t parent) {
-	hid_t type_id = H5Tcopy(H5T_C_S1);
+void H5BM::setAttribute(const std::string& attrName, const std::string& attr, hid_t parent) {
+	auto type_id = H5Tcopy(H5T_C_S1);
 	H5Tset_size(type_id, attr.length());
 	setAttribute(attrName, attr.c_str(), parent, type_id);
 	H5Tclose(type_id);
 }
 
-void H5BM::setAttribute(const std::string& attrName, int attr, hid_t parent) {
-	hid_t type_id = H5Tcopy(H5T_NATIVE_INT);
-	setAttribute(attrName, &attr, parent, type_id);
-	H5Tclose(type_id);
+void H5BM::setAttribute(const std::string& attrName, const char* attr, hid_t parent) {
+	setAttribute(attrName, std::string(attr), parent);
 }
 
-void H5BM::setAttribute(const std::string& attrName, double attr, hid_t parent) {
-	hid_t type_id = H5Tcopy(H5T_NATIVE_DOUBLE);
+template<typename T>
+void H5BM::setAttribute(const std::string& attrName, T attr, hid_t parent) {
+	auto type_id = get_memtype<T>();
 	setAttribute(attrName, &attr, parent, type_id);
 	H5Tclose(type_id);
 }
 
 template<typename T>
-void H5BM::setAttribute(std::string attrName, T attr) {
+void H5BM::setAttribute(const std::string& attrName, T attr) {
 	setAttribute(attrName, attr, m_file);
 }
 
